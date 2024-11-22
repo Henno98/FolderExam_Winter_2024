@@ -326,6 +326,7 @@ int main()
 	//
 
 	Landscape chunk("Las/Main.txt");
+	chunk.Matrix = glm::scale(chunk.Matrix, vec3(0.1f));
 	
 
 	// Shader for light cube
@@ -350,7 +351,7 @@ int main()
 	glDepthFunc(GL_LESS);
 	float lastFrame = 0.f;
 
-	chunk.initshaders("model", shaderProgram);
+	chunk.initshaders();
 	while (!glfwWindowShouldClose(window))
 	{
 
@@ -391,7 +392,7 @@ int main()
 		// Exports the camera Position to the Fragment Shader for specular lighting
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
 
-		camera.Matrix(45.f, 0.1f, 100.f, shaderProgram, "camMatrix");
+		camera.Matrix(45.f, 0.1f, 1000.f, shaderProgram, "camMatrix");
 		camera.Inputs(window);
 		//cube.CubeMatrix[3].y = barycentric.y;
 
@@ -434,7 +435,14 @@ int main()
 			camera.Position.y += 5 * Deltatime;
 
 		}
+		if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) //forward
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			//seeWireFrame = true;
+			
 
+		}
+		
 
 
 		lightShader.Activate();

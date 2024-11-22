@@ -8,28 +8,28 @@ ObjectBinders::ObjectBinders()
 
 void ObjectBinders::Init(GLfloat* vertices, GLsizeiptr size)
 {
-	glGenVertexArrays(1, &ID);
-	glGenBuffers(1, &ID);
-	glBindBuffer(GL_ARRAY_BUFFER, ID);
+	glGenVertexArrays(1, &VAOID);
+	glGenBuffers(1, &VBOID);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOID);
 	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 }
 
 void ObjectBinders::EBOInit(GLuint* indices, GLsizeiptr size)
 {
-	glGenBuffers(1, &ID);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID);
+	glGenBuffers(1, &EBOID);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBOID );
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
 }
 
 void ObjectBinders::Bind()
 {
-	glBindVertexArray(ID);
-	glBindBuffer(GL_ARRAY_BUFFER, ID);
+	glBindVertexArray(VAOID);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOID);
 }
 
 void ObjectBinders::EBOBind()
 {
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOID);
 }
 
 void ObjectBinders::EBOUnBind()
@@ -46,7 +46,7 @@ void ObjectBinders::Unbind()
 
 void ObjectBinders::Delete()
 {
-	glDeleteVertexArrays(1, &ID);
-	glDeleteBuffers(1, &ID);
+	glDeleteVertexArrays(1, &VAOID);
+	glDeleteBuffers(1, &VBOID);
 }
 

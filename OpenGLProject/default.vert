@@ -34,4 +34,5 @@ void main()
 	color = aColor;
 	// Assigns the normal from the Vertex Data to "Normal"
 	Normal = aNormal;
+	gl_PointSize = 5.0;
 }

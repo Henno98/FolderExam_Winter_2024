@@ -4,11 +4,11 @@ class ObjectBinders
 {
 public:
 	ObjectBinders();
-
-	GLuint ID;
-
-
+	GLuint VAOID;
+	GLuint VBOID;
+	GLuint EBOID;
 	void Init(GLfloat* vertices, GLsizeiptr size);
+
 	void EBOInit(GLuint* indices, GLsizeiptr size);
 
 	void Bind();
