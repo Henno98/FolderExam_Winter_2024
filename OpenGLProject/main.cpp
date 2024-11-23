@@ -326,7 +326,8 @@ int main()
 	//
 
 	Landscape chunk("Las/Main.txt");
-	chunk.Matrix = glm::scale(chunk.Matrix, vec3(0.1f));
+	chunk.Matrix = glm::scale(chunk.Matrix, vec3(0.01f));
+	//chunk.Matrix = glm::translate(chunk.Matrix, vec3(0.f,10.f,0.f));
 	
 
 	// Shader for light cube
@@ -351,7 +352,6 @@ int main()
 	glDepthFunc(GL_LESS);
 	float lastFrame = 0.f;
 
-	chunk.initshaders();
 	while (!glfwWindowShouldClose(window))
 	{
 
@@ -374,20 +374,19 @@ int main()
 
 		npc.NPCMatrix[3] = vec4(Bez(t), 1);
 		
-
+		for(auto& triangles : chunk.indices)
+		{
+			if (chunk.IsInsideTriangle(triangles, cube.CubeMatrix[3])) {
+				float interpolatedy = chunk.Barycentric(cube.CubeMatrix[3], triangles);
+				//trophy.TrophyMatrix = glm::translate(trophy.TrophyMatrix, glm::vec3(0, interpolatedy,0));
+				cube.CubeMatrix[3].y = interpolatedy;
+			}
+		}
 		trophy.DrawTrophy(vec3(1,1,1),shaderProgram,"model");
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightColor"), light.lightColor.x, light.lightColor.y, light.lightColor.z);
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), light.lightPos.x, light.lightPos.y, light.lightPos.z);
-		//glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(Doormatrix));
-
-		/*planevao.Bind();
-		planeebo.Bind();
-		glDrawElements(GL_TRIANGLES, Indices.size(), GL_UNSIGNED_INT, nullptr);*/
-		//glDrawElements(GL_TRIANGLES, QuadIndices.size() * 3, GL_UNSIGNED_INT, nullptr);
-
 		
 		cube.DrawCube(vec3(0.2, 0.2, 0.2), vec3(0, 1, 1), shaderProgram, "model");
-
 
 		// Exports the camera Position to the Fragment Shader for specular lighting
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);

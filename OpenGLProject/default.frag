@@ -31,10 +31,10 @@ void main()
 	vec3 Diffuse = diffuse*lightColor;
 
 	// specular lighting
-	float specularLight = 0.50f;
+	float specularLight = 0.20f;
 	vec3 viewDirection = normalize(camPos - crntPos);
 	vec3 reflectionDirection = reflect(-lightDirection, normal);
-	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 32);
+	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 10);
 	vec3 specular = specAmount * specularLight * lightColor;
 
 	// outputs final color

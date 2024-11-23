@@ -1,8 +1,6 @@
 #pragma once
 #include <fstream>
-
 #include <iostream>
-#include <string>
 #include <vector>
 #include "sstream"
 #include "Vertex.h"
@@ -16,20 +14,22 @@ using namespace std;
 class Landscape
 {
 public:
+	
 	std::vector<Vertex> vertices;
 	std::vector<Vertex> Simplifiedvertices;
-	vector<Indices> indices;
-	float xmin{ 0 }, xmax, zmin{ 0 }, zmax;
-	glm::mat4 Matrix = glm::mat4(1.f);
-	float xoffset, yoffset, zoffset, PrevXval{0};
+	std::vector<Indices> indices;
 	ObjectBinders Binders;
+	glm::mat4 Matrix = glm::mat4(1.f);
+	float xmin{ 0 }, xmax, zmin{ 0 }, zmax;
+	float xoffset, yoffset, zoffset, PrevXval{0};
 	float Resolution{ 1.f };
-	float Chunksize{100.f};
+	float Chunksize{10.f};
+	float scale{ 1.f };
+	int rows, cols;
 	Landscape(const std::string& file)
 	{
 		ReadFile(file);
 	};
-
 	void ReadFile(const std::string& path )
 	{
 		ifstream file(path);
@@ -48,10 +48,9 @@ public:
 		{
 			
 			istringstream iss(line);
-			
-
 			if (!(iss >> xoffset >> yoffset >> zoffset))
 			{
+
 
 			}
 		
@@ -74,21 +73,11 @@ public:
 				vertices.emplace_back(Vertex{ glm::vec3((x-xoffset ),(z-zoffset ),(y -yoffset)) * scale,glm::vec3(1.f) });
 				linecount = 0;
 			}
-			
-			
-			
 
-
-				/*if (linecount > 10)
-				{
-					Simplifiedvertices.emplace_back(Vertex{ glm::vec3((x - xoffset),(z - zoffset),(y - yoffset)) * scale,glm::vec3(r,g,b) });
-
-					linecount = 0;
-				}*/
 				PrevXval = x;
 			
 		}
-		cout << "|";
+		cout << "|\n";
 		for (auto Points : vertices)
 		{
 			if (xmax < Points.position.x)
@@ -111,27 +100,26 @@ public:
 		}
 		cout << "Pointsky Vertices = " << vertices.size() << endl;
 		Triangulation();
+		CalculateNormals();
+		initshaders();
 
 	};
-
-	float scale{ 1.f };
-	int rows, cols;
 	void Triangulation()
 	{
 		float numpoints{ 0 };
 		glm::vec3 vals{ 0.f };
 		cout << "|";
 
-		cols = static_cast<int>(ceil((xmax - xmin) / Chunksize)) ;
-		rows = static_cast<int>(ceil((zmax - zmin) / Chunksize)) ;
+		cols = static_cast<int>(ceil((xmax - xmin) / Chunksize)) +1;
+		rows = static_cast<int>(ceil((zmax - zmin) / Chunksize)) +1;
 
-		for (int i = 0; i < cols; i++) {
+		for (int i = 0; i < cols ; i++) {
 			float xminrange = xmin + (Chunksize * i);
 			float xmaxrange = xmin + (Chunksize * (i + 1));
 
 			
 
-			for (int j = 0; j  < rows; j++) {
+			for (int j = 0; j  < rows  ; j++) {
 				float zminrange = zmin + (Chunksize * j);
 				float zmaxrange = zmin + (Chunksize * (j + 1));
 
@@ -150,22 +138,38 @@ public:
 
 				if (numpoints > 0) {
 					vals /= numpoints; // Average position
-					Simplifiedvertices.emplace_back(glm::vec3(xmaxrange - (Chunksize / 2), vals.y, zmaxrange - (Chunksize / 2)), glm::vec3(i, 0.f, j));
+					    // Adjust the position to be the center of the chunk
+                glm::vec3 center = glm::vec3(xminrange + (Chunksize / 2), vals.y, zminrange + (Chunksize / 2));
+                
+                // Store the simplified vertex at the chunk's center
+                Simplifiedvertices.emplace_back(center, glm::vec3(1.f,vals.y/10,1.f),glm::vec3(0.f));
+				}
+				else
+				{
+					glm::vec3 center = glm::vec3(xminrange + (Chunksize / 2), vals.y , zminrange + (Chunksize / 2));
+
+					// Store the simplified vertex at the chunk's center
+					Simplifiedvertices.emplace_back(center, glm::vec3(1.f,vals.y/10,1.f), glm::vec3(0.f));
 				}
 			}
+
 		}
 		// Generate indices for the grid
-		for (int i = 0; i < cols -1; i++) {
+		for (int i = 0; i < cols-1 ; i++) {
 			for (int j = 0; j < rows-1; j++) {
-				unsigned int v0 = i * (rows + 1) + j;         // Top-left
-				unsigned int v1 = v0 + 1;                    // Top-right
-				unsigned int v2 = (i + 1) * (rows + 1) + j;  // Bottom-left
-				unsigned int v3 = v2 + 1;                    // Bottom-right
+			unsigned int v0 = i * rows + j;
+			unsigned int v1 = (i + 1) * rows + j;
+			unsigned int v2 = i * rows + (j + 1);
+			unsigned int v3 = (i + 1) * rows + (j + 1);           // Bottom-right
 
+			// Make sure indices are within range
+			if (v0 < Simplifiedvertices.size() && v1 < Simplifiedvertices.size() &&
+				v2 < Simplifiedvertices.size() && v3 < Simplifiedvertices.size()) {
 				// First triangle (v0, v1, v2)
 				indices.emplace_back(Indices{ v0, v1, v2 });
 				// Second triangle (v1, v3, v2)
-				//indices.emplace_back(Indices{ v1, v3, v2 });
+				indices.emplace_back(Indices{ v1, v3, v2 });
+			}
 			}
 		}
 		cout << "|" << endl;
@@ -176,7 +180,38 @@ public:
 			cout << Vertex.position.x << " " << Vertex.position.y << " " << Vertex.position.z << endl;
 		}*/
 	}
-	
+	void CalculateNormals()
+	{
+		float trianglenorm = 0;
+		float verticenormal = 0;
+		
+		for(const auto& triangles : indices)
+		{
+			const glm::vec3& v0 = Simplifiedvertices[triangles.V0].position;
+			const glm::vec3& v1 = Simplifiedvertices[triangles.V1].position;
+			const glm::vec3& v2 = Simplifiedvertices[triangles.V2].position;
+
+			glm::vec3 edge1 = v1 - v0;
+			glm::vec3 edge2 = v2 - v0;
+
+			glm::vec3 norm = glm::cross(edge1, edge2);
+
+			glm::vec3 normals = glm::normalize(norm);
+
+			Simplifiedvertices[triangles.V0].normal += normals;
+			Simplifiedvertices[triangles.V1].normal += normals;
+			Simplifiedvertices[triangles.V2].normal += normals;
+			trianglenorm++;
+			
+		}
+		for (auto& vertice : Simplifiedvertices)
+		{
+			vertice.normal = glm::normalize(vertice.normal);
+			verticenormal++;
+		}
+		cout << "calculated normals for: " << trianglenorm << " triangles\n";
+		cout << "Calculated normals for : " << verticenormal << " Vertices\n";
+	}
 	void initshaders()
 	{
 
@@ -185,14 +220,14 @@ public:
 		Binders.EBOInit(reinterpret_cast<GLuint*>(indices.data()), (indices.size() * sizeof(Indices)));
 		Binders.Bind();
 		Binders.EBOBind();
-		
 		Vertex::BindAttributes();
-		
-
 		Binders.Unbind();
 		Binders.EBOUnBind();
+		std::cout << "Shaders bound." << endl;
 	}
-
+	void SetChunksize(float newsize){
+		Chunksize = newsize;
+	}
 	void draw(const char* uniform, Shader& shader)
 	{
 
@@ -200,11 +235,68 @@ public:
 		Binders.Bind();
 		Binders.EBOBind();
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(Matrix));
-		
-		glDrawElements(GL_TRIANGLES, indices.size(),GL_UNSIGNED_INT,nullptr);
+		//glDrawArrays(GL_POINTS, 0, vertices.size());
+		glDrawElements(GL_TRIANGLES, indices.size()*3,GL_UNSIGNED_INT,nullptr);
 
 		
 
 	};
+	float Barycentric(glm::vec3 actorPosition, Indices& triangle )
+	{
+		
+		glm::vec3 p1 = Simplifiedvertices[triangle.V0].position;
+		glm::vec3 p2 = Simplifiedvertices[triangle.V1].position;
+		glm::vec3 p3 = Simplifiedvertices[triangle.V2].position;
+		glm::vec3 p4 = actorPosition;
+		glm::vec3 p12 = p2 - p1;
+		glm::vec3 p13 = p3 - p1;
+		glm::vec3 cross = glm::cross(p13, p12);
+		float area_123 = cross.y; // double the area
+		glm::vec3 baryc; // for return
+
+		// u
+		glm::vec3 p = p2 - p4;
+		glm::vec3 q = p3 - p4;
+		glm::vec3 nu = glm::cross(q, p);
+		// double the area of p4pq
+		baryc.x = nu.y / area_123;
+
+		// v
+		p = p3 - p4;
+		q = p1 - p4;
+		glm::vec3 nv = glm::cross(q, p);
+		// double the area of p4pq
+		baryc.y = nv.y / area_123;
+
+		// w
+		p = p1 - p4;
+		q = p2 - p4;
+		glm::vec3 nw = (glm::cross(q, p));
+		// double the area of p4pq
+		baryc.z = nw.y / area_123;
+
+		float interx = Simplifiedvertices[triangle.V0].position.y* baryc.x;
+		float intery = Simplifiedvertices[triangle.V1].position.y* baryc.y;
+		float interz = Simplifiedvertices[triangle.V2].position.y* baryc.z;
+
+		float NewPosition = actorPosition.y + (interx + intery + interz);
+
+		return NewPosition;
+
+	}
+	bool IsInsideTriangle(Indices& triangle, glm::vec3 actorposition)
+	{
+
+		if (actorposition.x > Simplifiedvertices[triangle.V0].position.x &&
+			actorposition.x < Simplifiedvertices[triangle.V2].position.x &&
+			actorposition.z > Simplifiedvertices[triangle.V0].position.z &&
+			actorposition.z > Simplifiedvertices[triangle.V2].position.z)
+		{
+			return true;
+		}
+		else return false;
+
+	};
+
 };
 
