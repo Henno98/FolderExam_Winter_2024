@@ -1,5 +1,7 @@
 #pragma once
 #include "../Dependencies/includes/glad/glad.h"
+#include "../Vertex.h"
+#include "vector"
 class ObjectBinders
 {
 public:
@@ -7,9 +9,9 @@ public:
 	GLuint VAOID;
 	GLuint VBOID;
 	GLuint EBOID;
-	void Init(GLfloat* vertices, GLsizeiptr size);
+	void Init(std::vector<Vertex>& Vertices);
 
-	void EBOInit(GLuint* indices, GLsizeiptr size);
+	void EBOInit(std::vector<Indices>& indices);
 
 	void Bind();
 

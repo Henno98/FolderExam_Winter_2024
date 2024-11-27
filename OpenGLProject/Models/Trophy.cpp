@@ -2,9 +2,9 @@
 
 #include "glad/glad.h"
 #include "glm/gtc/type_ptr.hpp"
-#include "Shaders/EBO.h"
-#include "Shaders/ShaderClass.h"
-#include "Shaders/VAO.h"
+#include "../Shaders/EBO.h"
+#include "../Shaders/ShaderClass.h"
+#include "../Shaders/VAO.h"
 
 Trophy::Trophy()
 {

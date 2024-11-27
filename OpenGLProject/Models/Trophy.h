@@ -3,7 +3,7 @@
 
 #include "glm/vec3.hpp"
 #include "BoundingBox.h"
-#include "Shaders/ShaderClass.h"
+#include "../Shaders/ShaderClass.h"
 
 struct trophyVertex
 {

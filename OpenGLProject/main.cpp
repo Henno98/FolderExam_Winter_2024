@@ -13,7 +13,6 @@
 #include <cmath>
 #include <cstddef>
 #include <string>
-#include "NPC.h"
 #include <Eigen/Dense>
 #include <threads.h>
 #include "Shaders/ShaderClass.h"
@@ -21,11 +20,12 @@
 #include "Shaders/VBO.h"
 #include "Shaders/EBO.h"
 #include "Camera.h"
-#include "Cube.h"
 #include "Shaders/Light.h"
-#include "Trophy.h"
 #include "Landscape.h"
-
+#include "Models/Cube.h"
+#include "Models/NPC.h"
+#include "Models/Trophy.h"
+#include "Mesh.h"
 
 
 using namespace std;
@@ -299,44 +299,32 @@ int main()
 
 	Light light;
 
-
-	//VAO planevao;
-	//planevao.Bind();
-	//VBO planevbo(reinterpret_cast<GLfloat*>(bezier.SurfacePoints.data()), (bezier.SurfacePoints.size() * sizeof(Planevertex)));
-	//planevbo.Bind();
-	//EBO planeebo(Indices.data(), Indices.size());
-	//planeebo.Bind();
-
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-	//glEnableVertexAttribArray(0);
-
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-	//glEnableVertexAttribArray(1);
-
-
-	//glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
-	//glEnableVertexAttribArray(2);
-	//glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(Doormatrix));
-
-
-	//planevao.Unbind();
-	//planevbo.Unbind();
-	//planeebo.Unbind();
-
+	
 	//
 
-	Landscape chunk("Las/Main.txt");
-	chunk.Matrix = glm::scale(chunk.Matrix, vec3(0.01f));
+	Landscape chunk("Las/Main.txt",0.1f,2);
+	//chunk.Matrix = glm::scale(chunk.Matrix, vec3(0.01f));
 	//chunk.Matrix = glm::translate(chunk.Matrix, vec3(0.f,10.f,0.f));
-	
+	Mesh cube(Cube);
+	vector<Mesh> Spheres;
+	for(int i = 0 ; i < 20; i++)
+	{
 
+		Spheres.emplace_back(Mesh(Sphere));
+
+	}
+	for (int i = 0; i < Spheres.size();i++)
+	{
+
+		Spheres[i].Matrix = glm::translate(Spheres[i].Matrix, vec3(rand()%100));
+	}
 	// Shader for light cube
 	Shader lightShader("Light.vert", "Light.frag");
 
 
 	NPC npc;
 	Trophy trophy;
-	Cube cube;
+	
 	vec3 pos1 = vec3(1, 0, 1);
 	vec3 pos2 = vec3(5, 0, 6);
 	vec3 pos3 = vec3(15, 0, 17);
@@ -345,7 +333,7 @@ int main()
 	float t = 0.f;
 
 	trophy.TrophyMatrix = translate(trophy.TrophyMatrix, vec3(10, 2, 10));
-	cube.CubeMatrix = translate(cube.CubeMatrix, vec3(0, 0, 7));
+	cube.Matrix = translate(cube.Matrix, vec3(0, 0, 7));
 
 
 	glEnable(GL_DEPTH_TEST);
@@ -376,17 +364,32 @@ int main()
 		
 		for(auto& triangles : chunk.indices)
 		{
-			if (chunk.IsInsideTriangle(triangles, cube.CubeMatrix[3])) {
-				float interpolatedy = chunk.Barycentric(cube.CubeMatrix[3], triangles);
-				//trophy.TrophyMatrix = glm::translate(trophy.TrophyMatrix, glm::vec3(0, interpolatedy,0));
-				cube.CubeMatrix[3].y = interpolatedy;
+			//cout << "trying to calculate barycentric" << endl;
+			if (chunk.IsInsideTriangle(triangles, cube.Matrix[3])) {
+				glm::vec3 position = cube.Matrix[3];
+				vec3 interpolatedy = chunk.Barycentric(position, triangles);
+				cube.Matrix[3].y =  interpolatedy.y;
+				break;
+				//cout << "interpolated y value to be: " << interpolatedy.y << endl;
+			}
+			for(int i = 0; i < Spheres.size();i++)
+			{
+
+				//cout << "trying to calculate barycentric" << endl;
+				if (chunk.IsInsideTriangle(triangles, Spheres[i].Matrix[3])) {
+					glm::vec3 position = Spheres[i].Matrix[3];
+					vec3 interpolatedy = chunk.Barycentric(position, triangles);
+					Spheres[i].Matrix[3].y = interpolatedy.y;
+					break;
+					//cout << "interpolated y value to be: " << interpolatedy.y << endl;
+				}
 			}
 		}
 		trophy.DrawTrophy(vec3(1,1,1),shaderProgram,"model");
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightColor"), light.lightColor.x, light.lightColor.y, light.lightColor.z);
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), light.lightPos.x, light.lightPos.y, light.lightPos.z);
 		
-		cube.DrawCube(vec3(0.2, 0.2, 0.2), vec3(0, 1, 1), shaderProgram, "model");
+		cube.Draw( "model", shaderProgram);
 
 		// Exports the camera Position to the Fragment Shader for specular lighting
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
@@ -399,38 +402,38 @@ int main()
 		//Cube movement
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) //left
 		{
-			cube.CubeMatrix[3].x += 5 * Deltatime;
+			cube.Matrix[3].x += 5 * Deltatime;
 			camera.Position.x += 5 * Deltatime;
 
 		}
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) //right
 		{
-			cube.CubeMatrix[3].x += -5 * Deltatime;
+			cube.Matrix[3].x += -5 * Deltatime;
 			camera.Position.x += -5 * Deltatime;
 
 		}
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) //back
 		{
-			cube.CubeMatrix[3].z += 5 * Deltatime;
+			cube.Matrix[3].z += 5 * Deltatime;
 			camera.Position.z += 5 * Deltatime;
 
 		}
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) //forward
 		{
-			cube.CubeMatrix[3].z += -5 * Deltatime;
+			cube.Matrix[3].z += -5 * Deltatime;
 			camera.Position.z += -5 * Deltatime;
 
 		}
 		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) //forward
 		{
-			cube.CubeMatrix[3].y += -5 * Deltatime;
+			cube.Matrix[3].y += -5 * Deltatime;
 			camera.Position.y += -5 * Deltatime;
 
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) //forward
 		{
-			cube.CubeMatrix[3].y += 5 * Deltatime;
+			cube.Matrix[3].y += 5 * Deltatime;
 			camera.Position.y += 5 * Deltatime;
 
 		}
@@ -471,7 +474,7 @@ int main()
 	//planeebo.Delete();
 	shaderProgram.Delete();
 	lightShader.Delete();
-
+	chunk.Binders.Delete();
 	// Delete window before ending the program
 	glfwDestroyWindow(window);
 	// Terminate GLFW before ending the program

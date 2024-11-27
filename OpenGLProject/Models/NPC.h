@@ -4,7 +4,7 @@
 #include "BoundingBox.h"
 #include "glad/glad.h"
 #include "glm/vec3.hpp"
-#include "Shaders/ShaderClass.h"
+#include "../Shaders/ShaderClass.h"
 
 struct NPCVertex
 {

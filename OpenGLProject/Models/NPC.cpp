@@ -6,8 +6,8 @@
 
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/transform.hpp"
-#include "Shaders/EBO.h"
-#include "Shaders/VAO.h"
+#include "../Shaders/EBO.h"
+#include "../Shaders/VAO.h"
 using namespace Eigen;
 //GLuint NPCIndices[]
 //{
