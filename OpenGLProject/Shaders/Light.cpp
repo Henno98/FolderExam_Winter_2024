@@ -7,7 +7,7 @@
 Light::Light()
 {
 	lightColor = glm::vec3(1.0f, 1.f, 1.f);
-	lightPos = glm::vec3(15.f, 15.f, 15.f);
+	lightPos = glm::vec3(40.f, 15.f, 40.f);
 	lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPos);
 }

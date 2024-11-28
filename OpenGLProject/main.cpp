@@ -302,22 +302,26 @@ int main()
 	
 	//
 
-	Landscape chunk("Las/Main.txt",0.1f,2);
+	Landscape chunk("Las/Main.txt",0.1f,5);
 	//chunk.Matrix = glm::scale(chunk.Matrix, vec3(0.01f));
 	//chunk.Matrix = glm::translate(chunk.Matrix, vec3(0.f,10.f,0.f));
-	Mesh cube(Cube);
+	Mesh cube(Sphere);
 	vector<Mesh> Spheres;
 	for(int i = 0 ; i < 20; i++)
 	{
-
-		Spheres.emplace_back(Mesh(Sphere));
+		Mesh sphere(Sphere);
+		Spheres.emplace_back(sphere);
 
 	}
-	for (int i = 0; i < Spheres.size();i++)
+	glm::vec3 translation = glm::vec3(2.f, 0.f, 2.f);
+	for(int i = 0; i < Spheres.size();i++)
 	{
+		
+		Spheres[i].Matrix = glm::translate(Spheres[i].Matrix, translation);
+		translation += vec3(2.f,0.f,2.f);
 
-		Spheres[i].Matrix = glm::translate(Spheres[i].Matrix, vec3(rand()%100));
 	}
+	
 	// Shader for light cube
 	Shader lightShader("Light.vert", "Light.frag");
 
@@ -333,7 +337,7 @@ int main()
 	float t = 0.f;
 
 	trophy.TrophyMatrix = translate(trophy.TrophyMatrix, vec3(10, 2, 10));
-	cube.Matrix = translate(cube.Matrix, vec3(0, 0, 7));
+//	cube.Matrix = translate(cube.Matrix, vec3(0, 0, 7));
 
 
 	glEnable(GL_DEPTH_TEST);
@@ -358,32 +362,50 @@ int main()
 
 		shaderProgram.Activate();
 		chunk.draw("model", shaderProgram);
+		
 		npc.DrawNPC(shaderProgram, "model");
 
 		npc.NPCMatrix[3] = vec4(Bez(t), 1);
 		
-		for(auto& triangles : chunk.indices)
-		{
 			//cout << "trying to calculate barycentric" << endl;
-			if (chunk.IsInsideTriangle(triangles, cube.Matrix[3])) {
-				glm::vec3 position = cube.Matrix[3];
-				vec3 interpolatedy = chunk.Barycentric(position, triangles);
-				cube.Matrix[3].y =  interpolatedy.y;
-				break;
+			if (chunk.IsInsideTriangle(chunk, cube.Position)) {
+				glm::vec3 interpolatedy = chunk.Barycentric(cube.Position, chunk);
+				if (cube.Position.y >= interpolatedy.y)
+				{
+					cube.Physics(chunk, Deltatime);
+				}
 				//cout << "interpolated y value to be: " << interpolatedy.y << endl;
 			}
-			for(int i = 0; i < Spheres.size();i++)
-			{
+		
+				//cube.Velocity = vec3(0.f);
+			
+			
+		
+		for (auto& balls :Spheres) {
+			
 
 				//cout << "trying to calculate barycentric" << endl;
-				if (chunk.IsInsideTriangle(triangles, Spheres[i].Matrix[3])) {
-					glm::vec3 position = Spheres[i].Matrix[3];
-					vec3 interpolatedy = chunk.Barycentric(position, triangles);
-					Spheres[i].Matrix[3].y = interpolatedy.y;
-					break;
+				if (chunk.IsInsideTriangle(chunk, balls.Position)) {
+					
+					glm::vec3 interpolatedy = chunk.Barycentric(balls.Position, chunk);
+					cout << interpolatedy.x << " "<<interpolatedy.y<< " "<< interpolatedy.z << endl;
+					if(balls.Position.y > interpolatedy.y)
+					{
+						
+
+					}
+					//balls.Physics(chunk, Deltatime);
+					//balls.Matrix[3].y = interpolatedy.y + balls.Radius;
 					//cout << "interpolated y value to be: " << interpolatedy.y << endl;
 				}
+			
+				balls.Physics(chunk, Deltatime);
 			}
+		for (int i = 0; i < Spheres.size(); i++)
+		{
+
+			Spheres[i].Draw("model", shaderProgram);
+
 		}
 		trophy.DrawTrophy(vec3(1,1,1),shaderProgram,"model");
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightColor"), light.lightColor.x, light.lightColor.y, light.lightColor.z);
@@ -475,6 +497,7 @@ int main()
 	shaderProgram.Delete();
 	lightShader.Delete();
 	chunk.Binders.Delete();
+	
 	// Delete window before ending the program
 	glfwDestroyWindow(window);
 	// Terminate GLFW before ending the program
