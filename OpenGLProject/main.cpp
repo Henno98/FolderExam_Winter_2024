@@ -388,12 +388,11 @@ int main()
 
 			
 		 }
-		 for (auto& ball : Spheres)
-		 {
-		 	physics.Physics(ball, Deltatime);
-		 	physics.Collision(ball, Spheres);
-			
-							 
+		 for (size_t i = 0; i < Spheres.size(); i++) {
+			 physics.Physics(Spheres[i], Deltatime);
+			 for (size_t j = i + 1; j < Spheres.size(); j++) {
+				 physics.Collision(Spheres[i], Spheres[j]);
+			 }
 		 }
 		
 		 cube.Physics(chunk, Deltatime);

@@ -62,39 +62,39 @@ public:
 
 
 	}
-	void Collision(Mesh& otheractor, std::vector<Mesh> actor)
-	{
-		for (int i = 0; i < actor.size(); i++) {
+	void Collision(Mesh& actor, Mesh& otheractor) {
+		// Calculate the vector between the centers of the two objects
+		glm::vec3 distanceVector = actor.Position - otheractor.Position;
+		float distance = glm::length(distanceVector);
 
-			glm::vec3 min = otheractor.collider.Position - otheractor.collider.Extent;
-			glm::vec3 max = otheractor.collider.Position + otheractor.collider.Extent;
-			glm::vec3 spheremin = actor[i].Position;
-			glm::vec3 spheremax = otheractor.Position;
-			glm::vec3 closestpoint = glm::clamp(spheremin, min, max);
-			float diameter = glm::distance(spheremin, spheremax);
-			// Calculate the vector between sphere centers and distance
-			glm::vec3 distanceVector = actor[i].Position - otheractor.Position;
-			float distance = glm::length(distanceVector);
-			float combinedRadius = actor[i].Radius + otheractor.Radius;
-			if (diameter <= actor[i].Radius * 2 && distance > 0) {
+		// Calculate combined radii of the two objects
+		float combinedRadius = actor.Radius + otheractor.Radius;
 
-				// Resolve overlap by moving spheres apart
-				float penetrationDepth = combinedRadius - distance;
-				glm::vec3 collisionNormal = glm::normalize(distanceVector);
+		// If distance is less than combined radii, there is a collision
+		if (distance < combinedRadius && distance > 0) {
+			// Normalize the collision normal (unit vector in the direction of separation)
+			glm::vec3 collisionNormal = glm::normalize(distanceVector);
 
-				// Move spheres proportional to their masses
-				glm::vec3 separation = collisionNormal * penetrationDepth;
-				actor[i].Position += separation * (otheractor.Mass / (actor[i].Mass + otheractor.Mass));
-				otheractor.Position -= separation * (actor[i].Mass / (actor[i].Mass + otheractor.Mass));
+			// Calculate the penetration depth
+			float penetrationDepth = combinedRadius - distance;
 
-				glm::vec3 V1 = ((actor[i].Mass - otheractor.Mass) / (actor[i].Mass + otheractor.Mass) * actor[i].Velocity)
-					+ ((2 * otheractor.Mass) / (actor[i].Mass + otheractor.Mass) * otheractor.Velocity);
-				glm::vec3 V2 = ((actor[i].Mass * 2) / (actor[i].Mass + otheractor.Mass) * actor[i].Velocity)
-					+ ((otheractor.Mass - actor[i].Mass) / (actor[i].Mass + otheractor.Mass) * otheractor.Velocity);
-				actor[i].Velocity = V1;
-				otheractor.Velocity = V2;
-				cout << "Ball collided with ball " << i << endl;
-			}
+			// Resolve the overlap by moving the objects apart proportional to their masses
+			glm::vec3 separation = collisionNormal * (penetrationDepth * 0.5f); // Split separation equally
+			actor.Position += separation * (otheractor.Mass / (actor.Mass + otheractor.Mass));
+			otheractor.Position -= separation * (actor.Mass / (actor.Mass + otheractor.Mass));
+
+			// Exchange velocities based on the masses of the objects (elastic collision)
+			glm::vec3 V1 = ((actor.Mass - otheractor.Mass) / (actor.Mass + otheractor.Mass) * actor.Velocity)
+				+ ((2 * otheractor.Mass) / (actor.Mass + otheractor.Mass) * otheractor.Velocity);
+			glm::vec3 V2 = ((otheractor.Mass - actor.Mass) / (actor.Mass + otheractor.Mass) * otheractor.Velocity)
+				+ ((2 * actor.Mass) / (actor.Mass + otheractor.Mass) * actor.Velocity);
+
+			actor.Velocity = V1;
+			otheractor.Velocity = V2;
+
+			// Apply damping to the velocities to avoid infinite bouncing
+			actor.Velocity *= 0.98f;
+			otheractor.Velocity *= 0.98f;
 		}
 	}
 
