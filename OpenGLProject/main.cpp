@@ -20,6 +20,7 @@
 #include "Shaders/VBO.h"
 #include "Shaders/EBO.h"
 #include "Camera.h"
+#include "Functions.h"
 #include "Shaders/Light.h"
 #include "Landscape.h"
 #include "Models/Cube.h"
@@ -302,10 +303,11 @@ int main()
 	
 	//
 
-	Landscape chunk("Las/Main.txt",0.1f,5);
+	Landscape chunk("Las/Main.txt",.5f,10);
 	//chunk.Matrix = glm::scale(chunk.Matrix, vec3(0.01f));
 	//chunk.Matrix = glm::translate(chunk.Matrix, vec3(0.f,10.f,0.f));
-	Mesh cube(Sphere);
+	Mesh cube(Cube);
+	cube.Position.y += 10.f;
 	vector<Mesh> Spheres;
 	for(int i = 0 ; i < 20; i++)
 	{
@@ -313,19 +315,21 @@ int main()
 		Spheres.emplace_back(sphere);
 
 	}
-	glm::vec3 translation = glm::vec3(2.f, 0.f, 2.f);
+	glm::vec3 translation = glm::vec3(10.f, 100.f, 10.f);
 	for(int i = 0; i < Spheres.size();i++)
 	{
 		
-		Spheres[i].Matrix = glm::translate(Spheres[i].Matrix, translation);
-		translation += vec3(2.f,0.f,2.f);
+		Spheres[i].Position = translation;
+		
+		//Spheres[i].Velocity = vec3(0.1f);
+		translation += vec3(10.f,0.f,10.f);
 
 	}
 	
 	// Shader for light cube
 	Shader lightShader("Light.vert", "Light.frag");
 
-
+	Functions physics(chunk);
 	NPC npc;
 	Trophy trophy;
 	
@@ -361,46 +365,42 @@ int main()
 		t = fmod(t + Deltatime, 1.0f);
 
 		shaderProgram.Activate();
-		chunk.draw("model", shaderProgram);
 		
-		npc.DrawNPC(shaderProgram, "model");
+		
+		
 
 		npc.NPCMatrix[3] = vec4(Bez(t), 1);
-		
-			//cout << "trying to calculate barycentric" << endl;
-			if (chunk.IsInsideTriangle(chunk, cube.Position)) {
-				glm::vec3 interpolatedy = chunk.Barycentric(cube.Position, chunk);
-				if (cube.Position.y >= interpolatedy.y)
-				{
-					cube.Physics(chunk, Deltatime);
-				}
-				//cout << "interpolated y value to be: " << interpolatedy.y << endl;
-			}
-		
-				//cube.Velocity = vec3(0.f);
+
+		 for(auto& triangle : chunk.indices)
+		 {
 			
-			
-		
-		for (auto& balls :Spheres) {
+				 glm::vec3 Barycentric = chunk.Barycentric(cube.Position, triangle);
+				 if (Barycentric.x >= 0 && Barycentric.y >= 0 && Barycentric.z >= 0 && (Barycentric.x + Barycentric.y + Barycentric.z <= 1)) {
+					 float interpolatedy =
+						 chunk.Simplifiedvertices[triangle.V0].position.y * Barycentric.x +
+						 chunk.Simplifiedvertices[triangle.V2].position.y * Barycentric.y +
+						 chunk.Simplifiedvertices[triangle.V1].position.y * Barycentric.z;
+					 cube.Position.y = interpolatedy;
+					 break;
+				 }
+				
 			
 
-				//cout << "trying to calculate barycentric" << endl;
-				if (chunk.IsInsideTriangle(chunk, balls.Position)) {
-					
-					glm::vec3 interpolatedy = chunk.Barycentric(balls.Position, chunk);
-					cout << interpolatedy.x << " "<<interpolatedy.y<< " "<< interpolatedy.z << endl;
-					if(balls.Position.y > interpolatedy.y)
-					{
-						
-
-					}
-					//balls.Physics(chunk, Deltatime);
-					//balls.Matrix[3].y = interpolatedy.y + balls.Radius;
-					//cout << "interpolated y value to be: " << interpolatedy.y << endl;
-				}
 			
-				balls.Physics(chunk, Deltatime);
-			}
+		 }
+		 for (auto& ball : Spheres)
+		 {
+		 	physics.Physics(ball, Deltatime);
+		 	physics.Collision(ball, Spheres);
+			
+							 
+		 }
+		
+		 cube.Physics(chunk, Deltatime);
+		 chunk.draw("model", shaderProgram);
+		 npc.DrawNPC(shaderProgram, "model");
+		cube.Draw( "model", shaderProgram);
+
 		for (int i = 0; i < Spheres.size(); i++)
 		{
 
@@ -411,12 +411,11 @@ int main()
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightColor"), light.lightColor.x, light.lightColor.y, light.lightColor.z);
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), light.lightPos.x, light.lightPos.y, light.lightPos.z);
 		
-		cube.Draw( "model", shaderProgram);
-
+		
 		// Exports the camera Position to the Fragment Shader for specular lighting
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
 
-		camera.Matrix(45.f, 0.1f, 1000.f, shaderProgram, "camMatrix");
+		camera.Matrix(45.f, 0.1f, 10000.f, shaderProgram, "camMatrix");
 		camera.Inputs(window);
 		//cube.CubeMatrix[3].y = barycentric.y;
 
@@ -424,46 +423,53 @@ int main()
 		//Cube movement
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) //left
 		{
-			cube.Matrix[3].x += 5 * Deltatime;
-			camera.Position.x += 5 * Deltatime;
+			cube.Position.x += 15 * Deltatime;
+			camera.Position.x += 15 * Deltatime;
 
 		}
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) //right
 		{
-			cube.Matrix[3].x += -5 * Deltatime;
-			camera.Position.x += -5 * Deltatime;
+			cube.Position.x += -15 * Deltatime;
+			camera.Position.x += -15 * Deltatime;
 
 		}
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) //back
 		{
-			cube.Matrix[3].z += 5 * Deltatime;
-			camera.Position.z += 5 * Deltatime;
+			cube.Position.z += 15 * Deltatime;
+			camera.Position.z += 15 * Deltatime;
 
 		}
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) //forward
 		{
-			cube.Matrix[3].z += -5 * Deltatime;
-			camera.Position.z += -5 * Deltatime;
+			cube.Position.z += -15 * Deltatime;
+			camera.Position.z += -15 * Deltatime;
 
 		}
 		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) //forward
 		{
-			cube.Matrix[3].y += -5 * Deltatime;
-			camera.Position.y += -5 * Deltatime;
+			cube.Position.y += -15 * Deltatime;
+			camera.Position.y += -15 * Deltatime;
 
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) //forward
 		{
-			cube.Matrix[3].y += 5 * Deltatime;
-			camera.Position.y += 5 * Deltatime;
-
+			cube.Position.y += 15 * Deltatime;
+			camera.Position.y += 15 * Deltatime;
+			
 		}
 		if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) //forward
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			//seeWireFrame = true;
 			
+
+		}
+		if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) //forward
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			//seeWireFrame = true;
+
 
 		}
 		
@@ -473,7 +479,9 @@ int main()
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(light.lightModel));
 		glUniform3f(glGetUniformLocation(lightShader.ID, "lightColor"), light.lightColor.x, light.lightColor.y, light.lightColor.z);
 		camera.Matrix(45.f, 0.1f, 100.f, lightShader, "camMatrix");
+		light.lightPos = glm::vec3(chunk.xmax, 100.f, chunk.zmax);
 		light.CreateLight(vec3(1, 1, 1), vec3(1, 1, 1));
+		
 
 
 

@@ -86,6 +86,8 @@ void Mesh::CreateCube()
 	Vertex::BindAttributes();
 	Binders.Unbind();
 	Binders.EBOUnBind();
+
+	collider.Extent = glm::vec3(1.f);
 }
 
 void Mesh::CreateSphere(int subdivisions, float scale, glm::vec3 speed)
@@ -112,7 +114,6 @@ void Mesh::CreateSphere(int subdivisions, float scale, glm::vec3 speed)
 	{
 		Vertex.position *= scale;
 	}
-	Matrix = MatrixCalc();
 	CalculateNormals();
 	Binders.Init(Vertices);
 	//Binders.EBOInit(indicies);
@@ -194,34 +195,42 @@ void Mesh::CalculateNormals()
 void Mesh::Physics(Landscape& terrain, float deltatime)
 {
 
-	glm::vec3 gravity(0, -9.81f, 0);
-	glm::vec3 force = gravity * Mass;
+	
+	
 
-	//for (const Indices& index : terrain.indices) {
-	//	glm::vec3 p0 = terrain.vertices[index.V0].position;
-	//	glm::vec3 p1 = terrain.vertices[index.V1].position;
-	//	glm::vec3 p2 = terrain.vertices[index.V2].position;
-
-	//	// Compute triangle normal
-	//	glm::vec3 normal = glm::cross(p1 - p0, p2 - p0);
-	//	float normalLength = glm::length(normal);
-
-	//	if (normalLength < 1e-6f) {
-	//		// Degenerate triangle, skip it
-	//		continue;
-	//	}
-	//	glm::vec3 PlaneNormal = glm::normalize(normal);
-
-
-
-	//}
-
+	
 	// Update sphere dynamics
-	Acceleration = force / Mass;
-	Velocity += (Acceleration * deltatime);
-	Position += (Velocity * deltatime);
+	Acceleration = gravity;
+	if (Velocity.y > -0.981f *Mass) {
+		Velocity += (Acceleration);
+	}
+	Position += (Velocity );
+	collider.Position = Position;
 	Matrix = MatrixCalc();
 
+}
+
+void Mesh::Collision(Mesh& otheractor)
+{
+
+	glm::vec3 min = otheractor.collider.Position - otheractor.collider.Extent;
+	glm::vec3 max = otheractor.collider.Position + otheractor.collider.Extent;
+	glm::vec3 spheremin = Position;
+	glm::vec3 spheremax = otheractor.Position;
+	glm::vec3 closestpoint = glm::clamp(spheremin, min, max);
+	float diameter = glm::distance(spheremin, spheremax);
+	glm::vec3 distance = spheremin - closestpoint;
+	if (diameter <= Radius * 2 && diameter > 0) {
+
+		
+		//otheractor.SphereMatrix = glm::translate(otheractor.SphereMatrix, distance);
+		glm::vec3 V1 = ((Mass - otheractor.Mass) / (Mass + otheractor.Mass) * Velocity)
+			+ ((2 * otheractor.Mass) / (Mass + otheractor.Mass) * otheractor.Velocity);
+		glm::vec3 V2 = ((Mass * 2) / (Mass + otheractor.Mass) * Velocity)
+			+ ((otheractor.Mass - Mass) / (Mass + otheractor.Mass) * otheractor.Velocity);
+		Velocity = V1;
+		otheractor.Velocity = V2;
+	}
 }
 
 void Mesh::Draw(const char* uniform, Shader& shader)

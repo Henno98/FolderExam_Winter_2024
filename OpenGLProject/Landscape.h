@@ -16,6 +16,7 @@ public:
 	std::vector<Vertex> vertices;
 	std::vector<Vertex> Simplifiedvertices;
 	std::vector<Indices> indices;
+	std::vector<glm::vec3> Normals;
 	ObjectBinders Binders;
 	glm::mat4 Matrix = glm::mat4(1.f);
 	float xmin, xmax, zmin, zmax;
@@ -203,6 +204,7 @@ public:
 			glm::vec3 norm = glm::cross(edge1, edge2);
 
 			glm::vec3 normals = glm::normalize(norm);
+			Normals.emplace_back(normals);
 
 			Simplifiedvertices[triangles.V0].normal += normals;
 			Simplifiedvertices[triangles.V1].normal += normals;
@@ -253,50 +255,46 @@ public:
 		
 
 	};
-	glm::vec3 Barycentric(glm::vec3& actorPosition, Landscape& terrain)
+	glm::vec3 Barycentric(glm::vec3& actorPosition, Indices& triangle)
 	{
-		for (auto& triangle : terrain.indices) {
-			glm::vec3 p1 = Simplifiedvertices[triangle.V0].position;
-			glm::vec3 p2 = Simplifiedvertices[triangle.V2].position;
-			glm::vec3 p3 = Simplifiedvertices[triangle.V1].position;
-			glm::vec3 p4 = actorPosition;
-			glm::vec3 NewPosition = actorPosition;
+		
+		glm::vec3 p1 = Simplifiedvertices[triangle.V0].position;
+		glm::vec3 p2 = Simplifiedvertices[triangle.V2].position;
+		glm::vec3 p3 = Simplifiedvertices[triangle.V1].position;
+		glm::vec3 p4 = actorPosition;
 
-			glm::vec3 p12 = p2 - p1;
-			glm::vec3 p13 = p3 - p1;
-			glm::vec3 cross = glm::cross(p13, p12);
-			float area_123 = cross.y; // double the area
-			glm::vec3 baryc; // for return
+		glm::vec3 p12 = p2 - p1;
+		glm::vec3 p13 = p3 - p1;
+		glm::vec3 cross = glm::cross(p13, p12);
+		float area_123 = cross.y; // double the area
+		glm::vec3 baryc; // for return
 
-			// u
-			glm::vec3 p = p2 - p4;
-			glm::vec3 q = p3 - p4;
-			glm::vec3 nu = glm::cross(q, p);
-			// double the area of p4pq
-			baryc.x = nu.y / area_123;
+		// u
+		glm::vec3 p = p2 - p4;
+		glm::vec3 q = p3 - p4;
+		glm::vec3 nu = glm::cross(q, p);
+		// double the area of p4pq
+		baryc.x = nu.y / area_123;
 
-			// v
-			p = p3 - p4;
-			q = p1 - p4;
-			glm::vec3 nv = glm::cross(q, p);
-			// double the area of p4pq
-			baryc.y = nv.y / area_123;
+		// v
+		p = p3 - p4;
+		q = p1 - p4;
+		glm::vec3 nv = glm::cross(q, p);
+		// double the area of p4pq
+		baryc.y = nv.y / area_123;
 
-			// w
-			p = p1 - p4;
-			q = p2 - p4;
-			glm::vec3 nw = (glm::cross(q, p));
-			// double the area of p4pq
-			baryc.z = nw.y / area_123;
-			if (baryc.x >= 0 && baryc.y >= 0 && baryc.z >= 0 && (baryc.x + baryc.y + baryc.z <= 1)) {
+		// w
+		p = p1 - p4;
+		q = p2 - p4;
+		glm::vec3 nw = (glm::cross(q, p));
+		// double the area of p4pq
+		baryc.z = nw.y / area_123;
 
-				return baryc.x * p1 + baryc.y * p2 + baryc.z * p3;
-				
-			}
-			return glm::vec3(0.f);
-		}
+		return baryc;
+
+		
 	}
-	bool IsInsideTriangle(Landscape& terrain, glm::vec3 actorposition)
+	bool IsInsideTriangle(Indices& triangle, glm::vec3 actorposition)
 	{
 
 		/*glm::vec3 p1 = glm::vec3(Simplifiedvertices[triangle.V0].position.x, 0.0f, Simplifiedvertices[triangle.V0].position.z);
@@ -304,11 +302,11 @@ public:
 		glm::vec3 p3 = glm::vec3(Simplifiedvertices[triangle.V2].position.x, 0.0f, Simplifiedvertices[triangle.V2].position.z);
 		glm::vec3 p = glm::vec3(actorposition.x, 0.0f, actorposition.z);*/
 
-		for (auto& triangle : terrain.indices) {
-			glm::vec3 p1 = glm::vec3(Simplifiedvertices[triangle.V0].position.x, 0.0f, Simplifiedvertices[triangle.V0].position.z);
-		glm::vec3 p2 = glm::vec3(Simplifiedvertices[triangle.V1].position.x, 0.0f, Simplifiedvertices[triangle.V1].position.z);
-		glm::vec3 p3 = glm::vec3(Simplifiedvertices[triangle.V2].position.x, 0.0f, Simplifiedvertices[triangle.V2].position.z);
-		glm::vec3 p = glm::vec3(actorposition.x, 0.0f, actorposition.z);
+		glm::vec3 p1 = Simplifiedvertices[triangle.V0].position;
+		glm::vec3 p2 = Simplifiedvertices[triangle.V2].position;
+		glm::vec3 p3 = Simplifiedvertices[triangle.V1].position;
+		glm::vec3 p = actorposition;
+
 
 			glm::vec3 v0 = p2 - p1;
 			glm::vec3 v1 = p3 - p1;
@@ -331,7 +329,7 @@ public:
 			if (u >= 0.0f && v >= 0.0f && w >= 0.0f) {
 				return true;
 			}
-		}
+			
 	};
 
 
