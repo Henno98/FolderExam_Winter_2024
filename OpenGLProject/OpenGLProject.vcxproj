@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Bezier.cpp" />
     <ClCompile Include="Functions.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Models\BoundingBox.cpp" />
@@ -332,6 +333,7 @@
     <Library Include="Dependencies\libs\glfw3_mt.lib" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bezier.h" />
     <ClInclude Include="Functions.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Models\BoundingBox.h" />

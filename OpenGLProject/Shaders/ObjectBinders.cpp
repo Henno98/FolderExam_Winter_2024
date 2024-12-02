@@ -12,6 +12,7 @@ void ObjectBinders::Init(std::vector<Vertex>& Vertices)
 	glGenBuffers(1, &VBOID);
 	glBindBuffer(GL_ARRAY_BUFFER, VBOID);
 	glBufferData(GL_ARRAY_BUFFER, Vertices.size()*sizeof(Vertex), Vertices.data(), GL_STATIC_DRAW);
+
 }
 
 void ObjectBinders::EBOInit(std::vector<Indices>& indices)
@@ -30,6 +31,18 @@ void ObjectBinders::Bind()
 void ObjectBinders::EBOBind()
 {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOID);
+}
+
+void ObjectBinders::ReBind(std::vector<Vertex>& Vertices)
+{
+	glBindBuffer(GL_ARRAY_BUFFER, VBOID);
+	glBufferData(GL_ARRAY_BUFFER, Vertices.size() * sizeof(Vertex), Vertices.data(), GL_DYNAMIC_DRAW);
+}
+
+void ObjectBinders::EBOReBind(std::vector<Indices>& indices)
+{
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOID);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Indices), indices.data(), GL_DYNAMIC_DRAW);
 }
 
 void ObjectBinders::EBOUnBind()

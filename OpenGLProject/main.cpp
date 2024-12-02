@@ -15,6 +15,8 @@
 #include <string>
 #include <Eigen/Dense>
 #include <threads.h>
+
+#include "Bezier.h"
 #include "Shaders/ShaderClass.h"
 #include "Shaders/VAO.h"
 #include "Shaders/VBO.h"
@@ -64,172 +66,6 @@ struct B_Spline
 };
 
 
-//template<typename T>
-//struct Bezier
-//{
-//
-//
-//	int FunctionGrade;
-//	float PointDistance;
-//	float KnotMin;
-//	float KnotMax;
-//	int KnotSample;
-//	vector<vec3> ControlPoints;
-//	vector<Vertex> SurfacePoints;
-//	vector<float> KnotVector_V;
-//	vector<float> KnotVector_U;
-//
-//	Bezier(int grade, float distance, float min, float max, int size)
-//		: FunctionGrade(grade), PointDistance(distance), KnotMin(min), KnotMax(max), KnotSample(size)
-//	{
-//	}
-//	void GenerateUniformKnotVector(std::vector<float>& knotVector, int size)
-//	{
-//		if (size <= FunctionGrade) {
-//			throw std::invalid_argument("Size must be greater than FunctionGrade.");
-//		}
-//
-//		int n = size + FunctionGrade + 1; // Total number of knots
-//		knotVector.resize(n);
-//
-//		// Fill in the knots
-//		// First segment: KnotMin
-//		for (int i = 0; i <= FunctionGrade; ++i) {
-//			knotVector[i] = KnotMin;
-//		}
-//
-//		// Middle segment: Uniformly spaced knots
-//		for (int i = FunctionGrade + 1; i < n - FunctionGrade - 1; ++i) {
-//			knotVector[i] = KnotMin + (KnotMax - KnotMin) * (i - FunctionGrade) / (size - 1);
-//		}
-//
-//		// Last segment: KnotMax
-//		for (int i = n - FunctionGrade - 1; i < n; ++i) {
-//			knotVector[i] = KnotMax;
-//		}
-//	}
-//	void GenerateKnotVectors(float _u, float _v)
-//	{
-//		GenerateUniformKnotVector(KnotVector_U, _u);
-//		GenerateUniformKnotVector(KnotVector_V,_v);
-//	}
-//
-//	//}
-//	int FindKnotSpan(float t, const vector<float>& knotVector)
-//	{
-//		int n = knotVector.size() - 1;
-//		if (t == knotVector[n]) return n - 1;
-//
-//		int low = FunctionGrade;
-//		int high = n;
-//		int mid = (low + high) / 2;
-//
-//		while (t < knotVector[mid] || t >= knotVector[mid + 1])
-//		{
-//			if (t < knotVector[mid]) high = mid;
-//			else low = mid;
-//			mid = (low + high) / 2;
-//		}
-//		return mid;
-//	}
-//
-//	vec3 Lerp(const vec3& p1, const vec3& p2, float t)
-//	{
-//		return ((1.f - t) * p1 + t * p2);
-//
-//	}
-//
-//	vec3 DeBoor(int k, int i, float t, const vector<vec3>& controlPoints, const vector<float>& knotPoints)
-//	{
-//		if (k == 0)
-//		{
-//			return controlPoints[i];
-//		}
-//		float alpha = (t - knotPoints[i]) / (knotPoints[i + FunctionGrade] - knotPoints[i]);
-//
-//		vec3 point1 = DeBoor(k - 1, i - 1, t, controlPoints, knotPoints);
-//		vec3 point2 = DeBoor(k - 1, i, t, controlPoints, knotPoints);
-//
-//		return Lerp(point1, point2, alpha);
-//	}
-//
-//	vec3 EvaluateBiQuadratic(float _u, float _v)
-//	{
-//		vec3 surfacePoint(0.0f);
-//
-//		int numControlPointsU = ControlPoints.size() - 1; // U direction control points count
-//		int numControlPointsV = ControlPoints.size() - 1; // V direction control points count (assuming square grid)
-//
-//		// Find knot spans for u and v
-//		int knotSpanU = FindKnotSpan(_u, KnotVector_U);
-//		int knotSpanV = FindKnotSpan(_v, KnotVector_V);
-//
-//		// Loop through control points and calculate weighted sum for surface point
-//		for (int i = knotSpanU - FunctionGrade + 1; i <= knotSpanU; ++i)
-//		{
-//			for (int j = knotSpanV - FunctionGrade + 1; j <= knotSpanV; ++j)
-//			{
-//				vec3 controlPointWeight = DeBoor(FunctionGrade - 1, i, _u, ControlPoints, KnotVector_U) *
-//					DeBoor(FunctionGrade - 1, j, _v, ControlPoints, KnotVector_V);
-//				surfacePoint += controlPointWeight;
-//			}
-//		}
-//		return surfacePoint;
-//	}
-//	void GenerateSurfacePoints(int uSamples, int vSamples)
-//	{
-//		for (int i = 0; i < uSamples; ++i)
-//		{
-//			float u = KnotMin + (KnotMax - KnotMin) * i / (uSamples - 1);
-//			for (int j = 0; j < vSamples; ++j)
-//			{
-//				float v = KnotMin + (KnotMax - KnotMin) * j / (vSamples - 1);
-//				vec3 surfacePoint = EvaluateBiQuadratic(u, v);
-//				SurfacePoints.emplace_back(Vertex{ surfacePoint,vec3(1.f),vec3(1.f) });
-//
-//			}
-//		}
-//	}
-//
-//
-//};
-//
-//vector<unsigned int> GenerateIndices(int uSamples, int vSamples)
-//{
-//	vector<unsigned int> indices;
-//
-//	for (int i = 0; i < uSamples - 1; ++i)
-//	{
-//		for (int j = 0; j < vSamples - 1; ++j)
-//		{
-//			int topLeft = i * vSamples + j;       // Correct row, column
-//			int topRight = topLeft + 1;            // Correct row, column + 1
-//			int bottomLeft = (i + 1) * vSamples + j; // Next row, same column
-//			int bottomRight = bottomLeft + 1;      // Next row, same column + 1
-//
-//			// Ensure these indices are within bounds
-//			indices.push_back(topLeft);
-//			indices.push_back(bottomLeft);
-//			indices.push_back(bottomRight);
-//			indices.push_back(topLeft);
-//			indices.push_back(bottomRight);
-//			indices.push_back(topRight);
-//		}
-//	}
-//	return indices;
-//}
-
-
-
-
-
-
-float curveplane(float x, float y)
-{
-
-	return cos(x) + sin(y) - cos(y);
-}
-
 
 
 int main()
@@ -267,50 +103,25 @@ int main()
 
 	Camera camera(width, height, glm::vec3((-0.1f), 5.f, (-0.1f)));
 
-	//Bezier<float> bezier(3, 0.5f, -2.0f, 3.0f,7);
-	//bezier.ControlPoints = {
-	//	 glm::vec3(0.0f, 0.0f, 0.0f),  // Point 0 (Bottom Left)
-	//glm::vec3(1.0f, 0.0f, 0.0f),  // Point 1 (Bottom Right)
-	//glm::vec3(2.0f, 0.0f, 0.0f),  // Point 2 (Bottom Right)
-	//glm::vec3(3.0f, 0.0f, 0.0f),  // Point 3 (Bottom Right)
-
-	//glm::vec3(0.0f, 1.0f, 0.0f),  // Point 4 (Middle Left)
-	//glm::vec3(1.0f, 1.0f, 0.0f),  // Point 5 (Middle Right)
-	//glm::vec3(2.0f, 1.0f, 0.0f),  // Point 6 (Middle Right)
-	//glm::vec3(3.0f, 1.0f, 0.0f),  // Point 7 (Middle Right)
-
-	//glm::vec3(0.0f, 2.0f, 0.0f),  // Point 8 (Top Left)
-	//glm::vec3(1.0f, 2.0f, 0.0f),  // Point 9 (Top Right)
-	//glm::vec3(2.0f, 2.0f, 0.0f),  // Point 10 (Top Right)
-	//glm::vec3(3.0f, 2.0f, 0.0f)   // Point 11 (Top Right)
-
-	//};
-
-	//int u = 4;
-	//int v = 6;
-	//bezier.GenerateKnotVectors(u,v);
-
-	//// Generate surface points for 20x20 samples
-	//bezier.GenerateSurfacePoints(u,v);
-	//vector<unsigned int> Indices = GenerateIndices(16,18);
-
-	//mat4 Doormatrix = mat4(1.0f);
-	//Doormatrix = translate(Doormatrix, vec3(-1.f));
-
-
+	Bezier cubespline(3, 0.9f, .0f, 3.0f, 1000);
+	vector<Mesh> SplinesMesh;
+	vector<Bezier> Splines;
+	//Bezier spline(1, 0.9f, .0f, 3.0f,1000);
 	Light light;
-
-	
-	//
-
-	Landscape chunk("Las/Main.txt",.5f,10);
-	//chunk.Matrix = glm::scale(chunk.Matrix, vec3(0.01f));
-	//chunk.Matrix = glm::translate(chunk.Matrix, vec3(0.f,10.f,0.f));
+	Landscape chunk("Las/Main.txt",.5f,5);
 	Mesh cube(Cube);
 	cube.Position.y += 10.f;
+	cube.Position.z += 10.f;
 	vector<Mesh> Spheres;
-	for(int i = 0 ; i < 20; i++)
+	ObjectBinders splinebinder;
+	for(int i = 0 ; i < 40; i++)
 	{
+		Bezier spline(3, 0.9f, .0f, 1.0f, 100);
+		Splines.emplace_back(spline);
+
+		Mesh splinemesh(Line);
+		SplinesMesh.emplace_back(splinemesh);
+
 		Mesh sphere(Sphere);
 		Spheres.emplace_back(sphere);
 
@@ -318,12 +129,16 @@ int main()
 	glm::vec3 translation = glm::vec3(10.f, 100.f, 10.f);
 	for(int i = 0; i < Spheres.size();i++)
 	{
-		
+		/*Splines[i].GenerateUniformKnotVector();
+		Splines[i].generateBSplineVertices(1000, Splines[i].ControlPoints);*/
+
+		SplinesMesh[i].CustomCreateSpline(Splines[i].SurfacePoints);
 		Spheres[i].Position = translation;
-		
+	
 		//Spheres[i].Velocity = vec3(0.1f);
 		translation += vec3(10.f,0.f,10.f);
-
+		
+		
 	}
 	
 	// Shader for light cube
@@ -341,13 +156,21 @@ int main()
 	float t = 0.f;
 
 	trophy.TrophyMatrix = translate(trophy.TrophyMatrix, vec3(10, 2, 10));
-//	cube.Matrix = translate(cube.Matrix, vec3(0, 0, 7));
 
+	
+	
+	Mesh Spline(Line);
+	Spline.CustomCreateSpline(cubespline.SurfacePoints);
+	splinebinder.Init(cubespline.SurfacePoints);
+	splinebinder.Bind();
+	Vertex::BindAttributes();
+	
+	glm::mat4 splinematrix = glm::mat4(1.f);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	float lastFrame = 0.f;
-
+	float time{0};
 	while (!glfwWindowShouldClose(window))
 	{
 
@@ -366,47 +189,73 @@ int main()
 
 		shaderProgram.Activate();
 		
-		
-		
+		time += Deltatime;
 
+		if (time > 1)
+		{
+			cube.BallLineStrip.emplace_back(cube.Position, glm::vec3(1.f));
+			for(int i = 0; i<Spheres.size();i++)
+			{
+				Spheres[i].BallLineStrip.emplace_back(Spheres[i].Position, glm::vec3(1.f));
+			}
+			time = 0;
+		}
+		if (cube.BallLineStrip.size() > cubespline.FunctionGrade) {
+			cubespline.OverWriteControlPoints(cube.BallLineStrip);
+			cubespline.GenerateUniformKnotVector();
+			cubespline.generateBSplineVertices(1000, cubespline.ControlPoints);
+			splinebinder.ReBind(cubespline.SurfacePoints);
+			splinebinder.Bind();
+			glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(splinematrix));
+			glLineWidth(10.f);
+			glDrawArrays(GL_LINE_STRIP, 0, cubespline.SurfacePoints.size());
+			
+		}
 		npc.NPCMatrix[3] = vec4(Bez(t), 1);
-
 		 for(auto& triangle : chunk.indices)
 		 {
 			
-				 glm::vec3 Barycentric = chunk.Barycentric(cube.Position, triangle);
+				 glm::vec3 Barycentric = physics.Barycentric(cube.Position, triangle);
+
 				 if (Barycentric.x >= 0 && Barycentric.y >= 0 && Barycentric.z >= 0 && (Barycentric.x + Barycentric.y + Barycentric.z <= 1)) {
 					 float interpolatedy =
 						 chunk.Simplifiedvertices[triangle.V0].position.y * Barycentric.x +
 						 chunk.Simplifiedvertices[triangle.V2].position.y * Barycentric.y +
 						 chunk.Simplifiedvertices[triangle.V1].position.y * Barycentric.z;
-					 cube.Position.y = interpolatedy;
+						 cube.Position.y = interpolatedy + (cube.Radius*2) + 4.f;
+						 cube.Matrix = cube.MatrixCalc();
 					 break;
 				 }
-				
-			
 
-			
 		 }
-		 for (size_t i = 0; i < Spheres.size(); i++) {
-			 physics.Physics(Spheres[i], Deltatime);
-			 for (size_t j = i + 1; j < Spheres.size(); j++) {
+		 for (int i = 0; i < Spheres.size(); i++) {
+			physics.Physics(Spheres[i], Deltatime);
+			cubespline.OverWriteControlPoints(Spheres[i].BallLineStrip);
+			cubespline.GenerateUniformKnotVector();
+			cubespline.generateBSplineVertices(1000, cubespline.ControlPoints);
+			splinebinder.ReBind(cubespline.SurfacePoints);
+			splinebinder.Bind();
+			glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(splinematrix));
+			glLineWidth(10.f);
+			glDrawArrays(GL_LINE_STRIP, 0, cubespline.SurfacePoints.size());
+			 for (int j = i + 1; j < Spheres.size(); j++) {
 				 physics.Collision(Spheres[i], Spheres[j]);
 			 }
+			
 		 }
 		
+	//trophy.DrawTrophy(vec3(1,1,1),shaderProgram,"model");
 		 cube.Physics(chunk, Deltatime);
 		 chunk.draw("model", shaderProgram);
 		 npc.DrawNPC(shaderProgram, "model");
 		cube.Draw( "model", shaderProgram);
-
 		for (int i = 0; i < Spheres.size(); i++)
 		{
-
 			Spheres[i].Draw("model", shaderProgram);
-
+			
 		}
-		trophy.DrawTrophy(vec3(1,1,1),shaderProgram,"model");
+
+		
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightColor"), light.lightColor.x, light.lightColor.y, light.lightColor.z);
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), light.lightPos.x, light.lightPos.y, light.lightPos.z);
 		
@@ -420,54 +269,63 @@ int main()
 
 
 		//Cube movement
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) //left
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) 
 		{
 			cube.Position.x += 15 * Deltatime;
 			camera.Position.x += 15 * Deltatime;
 
 		}
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) //right
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) 
 		{
 			cube.Position.x += -15 * Deltatime;
 			camera.Position.x += -15 * Deltatime;
 
 		}
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) //back
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) 
 		{
 			cube.Position.z += 15 * Deltatime;
 			camera.Position.z += 15 * Deltatime;
 
 		}
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) //forward
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) 
 		{
 			cube.Position.z += -15 * Deltatime;
 			camera.Position.z += -15 * Deltatime;
 
 		}
-		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) //forward
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) 
 		{
 			cube.Position.y += -15 * Deltatime;
 			camera.Position.y += -15 * Deltatime;
 
 		}
 
-		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) //forward
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) 
 		{
 			cube.Position.y += 15 * Deltatime;
 			camera.Position.y += 15 * Deltatime;
 			
 		}
-		if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) //forward
+		if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) 
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			//seeWireFrame = true;
+			
 			
 
 		}
-		if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) //forward
+		if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) 
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			//seeWireFrame = true;
+			
+
+
+		}
+		if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) 
+		{
+			Mesh ball(Sphere);
+			ball.Position = camera.Position;
+			Spheres.emplace_back(ball);
+
 
 
 		}

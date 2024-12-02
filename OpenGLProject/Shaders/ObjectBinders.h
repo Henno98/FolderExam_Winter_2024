@@ -17,6 +17,10 @@ public:
 
 	void EBOBind();
 
+	void ReBind(std::vector<Vertex>& Vertices);
+
+	void EBOReBind(std::vector<Indices>& indices);
+
 	void EBOUnBind();
 
 	void Unbind();

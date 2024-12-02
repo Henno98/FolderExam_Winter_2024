@@ -159,6 +159,36 @@ void Mesh::CreateTriangle(const glm::vec3& v1, const glm::vec3& v2, const glm::v
 }
 
 
+void Mesh::CustomCreateTriangle(std::vector<Vertex>& vertices, std::vector<Indices>& indices)
+{
+	Vertices = vertices;
+	indicies = indices;
+	CalculateNormals();
+	Binders.Init(Vertices);
+	Binders.EBOInit(indicies);
+	Binders.Bind();
+	Binders.EBOBind();
+	Vertex::BindAttributes();
+	Binders.Unbind();
+	Binders.EBOUnBind();
+
+}
+
+void Mesh::CustomCreateSpline(std::vector<Vertex>& vertices)
+{
+	Vertices = vertices;
+	CalculateNormals();
+	Binders.Init(Vertices);
+	Binders.Bind();
+	Vertex::BindAttributes();
+	Binders.Unbind();
+}
+
+void Mesh::ReBind(std::vector<Vertex>& vertices)
+{
+	Binders.ReBind(vertices);
+}
+
 void Mesh::CalculateNormals()
 {
 	float trianglenorm = 0;
@@ -250,6 +280,13 @@ void Mesh::Draw(const char* uniform, Shader& shader)
 		break;
 	case Sphere:
 		glDrawArrays(GL_TRIANGLES, 0, Vertices.size());
+		break;
+	case Custom:
+		glDrawElements(GL_TRIANGLES, indicies.size(), GL_UNSIGNED_INT, nullptr);
+		break;
+	case Line:
+		glLineWidth(10.f);
+		glDrawArrays(GL_LINE_STRIP, 0, Vertices.size());
 		break;
 	default:
 		std::cout << "Mesh type does not exist" << std::endl;

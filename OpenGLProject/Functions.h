@@ -22,43 +22,77 @@ public:
 	glm::vec3 CA;
 	glm::vec3 normal;
 	glm::vec3 normalized;
+	glm::vec3 P1;
+	glm::vec3 P2;
+	glm::vec3 P3;
+	glm::vec3 P4;
 	void Physics(Mesh& actor, float deltatime);
-	glm::vec3 Barycentric(glm::vec3& actorPosition, Landscape& chunk,Indices& triangle)
+	glm::vec3 Barycentric(glm::vec3& actorPosition,Indices& triangle)
 	{
 
-		glm::vec3 p1 = chunk.Simplifiedvertices[triangle.V0].position;
-		glm::vec3 p2 = chunk.Simplifiedvertices[triangle.V2].position;
-		glm::vec3 p3 = chunk.Simplifiedvertices[triangle.V1].position;
-		glm::vec3 p4 = actorPosition;
+		 P1 = Terrain.Simplifiedvertices[triangle.V0].position;
+		P2 = Terrain.Simplifiedvertices[triangle.V2].position;
+		P3 = Terrain.Simplifiedvertices[triangle.V1].position;
+		P4 = actorPosition;
 
-		glm::vec3 p12 = p2 - p1;
-		glm::vec3 p13 = p3 - p1;
-		glm::vec3 cross = glm::cross(p13, p12);
+		BA = P2 - P1;
+		CA = P3 - P1;
+		glm::vec3 cross = glm::cross(BA, CA);
 		float area_123 = cross.y; // double the area
 		glm::vec3 baryc; // for return
 
 		// u
-		glm::vec3 p = p2 - p4;
-		glm::vec3 q = p3 - p4;
-		glm::vec3 nu = glm::cross(q, p);
+		BA = P2 - P4;
+		CA = P3 - P4;
+		glm::vec3 nu = glm::cross(BA,CA);
 		// double the area of p4pq
 		baryc.x = nu.y / area_123;
 
 		// v
-		p = p3 - p4;
-		q = p1 - p4;
-		glm::vec3 nv = glm::cross(q, p);
+		BA = P3 - P4;
+		CA = P1 - P4;
+		glm::vec3 nv = glm::cross(BA,CA);
 		// double the area of p4pq
 		baryc.y = nv.y / area_123;
 
 		// w
-		p = p1 - p4;
-		q = p2 - p4;
-		glm::vec3 nw = (glm::cross(q, p));
+		BA = P1 - P4;
+		CA = P2 - P4;
+		glm::vec3 nw = (glm::cross(BA,CA));
 		// double the area of p4pq
 		baryc.z = nw.y / area_123;
 
 		return baryc;
+		 
+		
+
+		//// Retrieve triangle vertices
+		//const glm::vec3& P1 = Terrain.Simplifiedvertices[triangle.V0].position;
+		//const glm::vec3& P2 = Terrain.Simplifiedvertices[triangle.V2].position;
+		//const glm::vec3& P3 = Terrain.Simplifiedvertices[triangle.V1].position;
+
+		//// Calculate constant values for the triangle
+		//glm::vec3 BA = P2 - P1;
+		//glm::vec3 CA = P3 - P1;
+		//float area_123 = glm::dot(glm::cross(BA, CA), glm::vec3(0, 1, 0)); // Using Y-axis projection
+
+		//// Early exit if the area is near zero (to avoid division by zero)
+		//if (fabs(area_123) < 1e-6f) {
+		//	return glm::vec3(-1.0f); // Invalid barycentric coordinates
+		//}
+
+		//glm::vec3 P4 = actorPosition; // Position to evaluate
+		//glm::vec3 baryc;
+
+		//// Calculate barycentric components
+		//glm::vec3 PA = P4 - P1;
+
+		//// Compute areas for barycentric coordinates using scalar triple products
+		//baryc.x = glm::dot(glm::cross(P3 - P4, P2 - P4), glm::vec3(0, 1, 0)) / area_123; // Area of sub-triangle 234
+		//baryc.y = glm::dot(glm::cross(P1 - P4, P3 - P4), glm::vec3(0, 1, 0)) / area_123; // Area of sub-triangle 314
+		//baryc.z = 1.0f - baryc.x - baryc.y; // Since baryc.x + baryc.y + baryc.z = 1
+
+		//return baryc;
 
 
 	}
@@ -99,4 +133,3 @@ public:
 	}
 
 };
-

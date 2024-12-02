@@ -16,7 +16,6 @@ public:
 	std::vector<Vertex> vertices;
 	std::vector<Vertex> Simplifiedvertices;
 	std::vector<Indices> indices;
-	std::vector<glm::vec3> Normals;
 	ObjectBinders Binders;
 	glm::mat4 Matrix = glm::mat4(1.f);
 	float xmin, xmax, zmin, zmax;
@@ -89,6 +88,7 @@ public:
 
 		}
 		cout << "Pointsky Vertices = " << vertices.size() << endl;
+		file.close();
 		//Triangulation();
 		processVertices(xmin, xmax, zmin, zmax, Chunksize, scale);
 		CalculateNormals();
@@ -204,7 +204,7 @@ public:
 			glm::vec3 norm = glm::cross(edge1, edge2);
 
 			glm::vec3 normals = glm::normalize(norm);
-			Normals.emplace_back(normals);
+			
 
 			Simplifiedvertices[triangles.V0].normal += normals;
 			Simplifiedvertices[triangles.V1].normal += normals;
@@ -255,84 +255,6 @@ public:
 		
 
 	};
-	glm::vec3 Barycentric(glm::vec3& actorPosition, Indices& triangle)
-	{
-		
-		glm::vec3 p1 = Simplifiedvertices[triangle.V0].position;
-		glm::vec3 p2 = Simplifiedvertices[triangle.V2].position;
-		glm::vec3 p3 = Simplifiedvertices[triangle.V1].position;
-		glm::vec3 p4 = actorPosition;
-
-		glm::vec3 p12 = p2 - p1;
-		glm::vec3 p13 = p3 - p1;
-		glm::vec3 cross = glm::cross(p13, p12);
-		float area_123 = cross.y; // double the area
-		glm::vec3 baryc; // for return
-
-		// u
-		glm::vec3 p = p2 - p4;
-		glm::vec3 q = p3 - p4;
-		glm::vec3 nu = glm::cross(q, p);
-		// double the area of p4pq
-		baryc.x = nu.y / area_123;
-
-		// v
-		p = p3 - p4;
-		q = p1 - p4;
-		glm::vec3 nv = glm::cross(q, p);
-		// double the area of p4pq
-		baryc.y = nv.y / area_123;
-
-		// w
-		p = p1 - p4;
-		q = p2 - p4;
-		glm::vec3 nw = (glm::cross(q, p));
-		// double the area of p4pq
-		baryc.z = nw.y / area_123;
-
-		return baryc;
-
-		
-	}
-	bool IsInsideTriangle(Indices& triangle, glm::vec3 actorposition)
-	{
-
-		/*glm::vec3 p1 = glm::vec3(Simplifiedvertices[triangle.V0].position.x, 0.0f, Simplifiedvertices[triangle.V0].position.z);
-		glm::vec3 p2 = glm::vec3(Simplifiedvertices[triangle.V1].position.x, 0.0f, Simplifiedvertices[triangle.V1].position.z);
-		glm::vec3 p3 = glm::vec3(Simplifiedvertices[triangle.V2].position.x, 0.0f, Simplifiedvertices[triangle.V2].position.z);
-		glm::vec3 p = glm::vec3(actorposition.x, 0.0f, actorposition.z);*/
-
-		glm::vec3 p1 = Simplifiedvertices[triangle.V0].position;
-		glm::vec3 p2 = Simplifiedvertices[triangle.V2].position;
-		glm::vec3 p3 = Simplifiedvertices[triangle.V1].position;
-		glm::vec3 p = actorposition;
-
-
-			glm::vec3 v0 = p2 - p1;
-			glm::vec3 v1 = p3 - p1;
-			glm::vec3 v2 = p - p1;
-
-			float d00 = glm::dot(v0, v0);
-			float d01 = glm::dot(v0, v1);
-			float d11 = glm::dot(v1, v1);
-			float d20 = glm::dot(v2, v0);
-			float d21 = glm::dot(v2, v1);
-
-			float denom = d00 * d11 - d01 * d01;
-			if (denom == 0.0f) return false; // Degenerate triangle check
-
-			float u = (d11 * d20 - d01 * d21) / denom;
-			float v = (d00 * d21 - d01 * d20) / denom;
-			float w = 1.0f - u - v;
-
-			// Check if the point is inside the triangle
-			if (u >= 0.0f && v >= 0.0f && w >= 0.0f) {
-				return true;
-			}
-			
-	};
-
-
 	int getCellIndex(float x, float z, float xmin, float zmin, float Chunksize, int cols) {
 		int col = static_cast<int>((x - xmin) / Chunksize);
 		int row = static_cast<int>((z - zmin) / Chunksize);
@@ -394,7 +316,9 @@ public:
 				
 			}
 		}
+		vertices.clear();
+	
 	}
-
+	
 };
 

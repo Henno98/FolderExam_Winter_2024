@@ -14,14 +14,16 @@ enum MeshType
 	Pyramid,
 	Cube,
 	Sphere,
-	unknown
-
+	Line,
+	unknown,
+	Custom
 };
 class Mesh
 {
 public:
 	std::vector<Vertex> Vertices;
 	std::vector<Indices> indicies;
+	std::vector<Vertex> BallLineStrip;
 	ObjectBinders Binders;
 	BoundingBox collider;
 	glm::mat4 Matrix = glm::mat4(1.f);
@@ -49,6 +51,12 @@ public:
 		case Sphere:
 			CreateSphere(3,1.f,glm::vec3(1.f));
 			break;
+		case Custom:
+			cout << "Call on the CustomCreate function" << endl;
+			break;
+		case Line:
+			cout << "Call on the CustomCreate function" << endl;
+			break;
 		default:
 			std::cout << "Mesh type does not exist" << std::endl;
 		}
@@ -60,6 +68,9 @@ public:
 	void Subdivide(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, int n);
 	void CreateTriangle(const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3);
 	void Diamond();
+	void CustomCreateTriangle(std::vector<Vertex>& vertices, std::vector<Indices>& indices);
+	void CustomCreateSpline(std::vector<Vertex>& vertices);
+	void ReBind(std::vector<Vertex>& vertices);
 	void CalculateNormals();
 	void Physics(Landscape& terrain, float deltatime);
 	void Collision(Mesh& otheractor);
