@@ -63,37 +63,6 @@ public:
 		baryc.z = nw.y / area_123;
 
 		return baryc;
-		 
-		
-
-		//// Retrieve triangle vertices
-		//const glm::vec3& P1 = Terrain.Simplifiedvertices[triangle.V0].position;
-		//const glm::vec3& P2 = Terrain.Simplifiedvertices[triangle.V2].position;
-		//const glm::vec3& P3 = Terrain.Simplifiedvertices[triangle.V1].position;
-
-		//// Calculate constant values for the triangle
-		//glm::vec3 BA = P2 - P1;
-		//glm::vec3 CA = P3 - P1;
-		//float area_123 = glm::dot(glm::cross(BA, CA), glm::vec3(0, 1, 0)); // Using Y-axis projection
-
-		//// Early exit if the area is near zero (to avoid division by zero)
-		//if (fabs(area_123) < 1e-6f) {
-		//	return glm::vec3(-1.0f); // Invalid barycentric coordinates
-		//}
-
-		//glm::vec3 P4 = actorPosition; // Position to evaluate
-		//glm::vec3 baryc;
-
-		//// Calculate barycentric components
-		//glm::vec3 PA = P4 - P1;
-
-		//// Compute areas for barycentric coordinates using scalar triple products
-		//baryc.x = glm::dot(glm::cross(P3 - P4, P2 - P4), glm::vec3(0, 1, 0)) / area_123; // Area of sub-triangle 234
-		//baryc.y = glm::dot(glm::cross(P1 - P4, P3 - P4), glm::vec3(0, 1, 0)) / area_123; // Area of sub-triangle 314
-		//baryc.z = 1.0f - baryc.x - baryc.y; // Since baryc.x + baryc.y + baryc.z = 1
-
-		//return baryc;
-
 
 	}
 	void Collision(Mesh& actor, Mesh& otheractor) {
@@ -127,8 +96,8 @@ public:
 			otheractor.Velocity = V2;
 
 			// Apply damping to the velocities to avoid infinite bouncing
-			actor.Velocity *= 0.98f;
-			otheractor.Velocity *= 0.98f;
+			actor.Velocity *= actor.Friction;
+			otheractor.Velocity *= otheractor.Friction;
 		}
 	}
 

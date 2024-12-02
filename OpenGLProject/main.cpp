@@ -41,32 +41,6 @@ using namespace glm;
 const unsigned int width = 2000;
 const unsigned int height = 1800;
 
-template <typename T>
-struct B_Spline
-{
-	T p0, p1, p2, p3;
-
-	B_Spline() : p0(T()), p1(T()), p2(T()), p3(T())
-	{
-	}
-
-	B_Spline(T p0, T p1, T p2, T p3) : p0(p0), p1(p1), p2(p2), p3(p3)
-	{
-	}
-
-	T operator()(const float t)
-	{
-		const auto u = 1 - t;
-		const auto tp0 = powf(u, 3) * p0;
-		const auto tp1 = 3 * powf(u, 2) * t * p1;
-		const auto tp2 = 3 * u * powf(t, 2) * p2;
-		const auto tp3 = powf(t, 3) * p3;
-		return tp0 + tp1 + tp2 + tp3;
-	}
-};
-
-
-
 
 int main()
 {
@@ -98,44 +72,39 @@ int main()
 
 	// Generates Shader object using shaders defualt.vert and default.frag
 	Shader shaderProgram("default.vert", "default.frag");
-
-	//	NPC npc;
-
+	//init camera
 	Camera camera(width, height, glm::vec3((-0.1f), 5.f, (-0.1f)));
-
+	//init spline
 	Bezier cubespline(3, 0.9f, .0f, 3.0f, 1000);
-	vector<Mesh> SplinesMesh;
-	vector<Bezier> Splines;
-	//Bezier spline(1, 0.9f, .0f, 3.0f,1000);
+	
+
+	//init lightshader
 	Light light;
+	//init Landscape
 	Landscape chunk("Las/Main.txt",.5f,5);
+	//init cube
 	Mesh cube(Cube);
 	cube.Position.y += 10.f;
 	cube.Position.z += 10.f;
+	//init spheres
 	vector<Mesh> Spheres;
 	ObjectBinders splinebinder;
+	//Create Spheres and place on different spots on plane
 	for(int i = 0 ; i < 40; i++)
 	{
-		Bezier spline(3, 0.9f, .0f, 1.0f, 100);
-		Splines.emplace_back(spline);
-
-		Mesh splinemesh(Line);
-		SplinesMesh.emplace_back(splinemesh);
-
 		Mesh sphere(Sphere);
 		Spheres.emplace_back(sphere);
 
 	}
+	
 	glm::vec3 translation = glm::vec3(10.f, 100.f, 10.f);
 	for(int i = 0; i < Spheres.size();i++)
 	{
-		/*Splines[i].GenerateUniformKnotVector();
-		Splines[i].generateBSplineVertices(1000, Splines[i].ControlPoints);*/
-
-		SplinesMesh[i].CustomCreateSpline(Splines[i].SurfacePoints);
-		Spheres[i].Position = translation;
+		
 	
-		//Spheres[i].Velocity = vec3(0.1f);
+
+
+		Spheres[i].Position = translation;
 		translation += vec3(10.f,0.f,10.f);
 		
 		
@@ -143,28 +112,17 @@ int main()
 	
 	// Shader for light cube
 	Shader lightShader("Light.vert", "Light.frag");
-
+	//Math functions and physics
 	Functions physics(chunk);
-	NPC npc;
-	Trophy trophy;
 	
-	vec3 pos1 = vec3(1, 0, 1);
-	vec3 pos2 = vec3(5, 0, 6);
-	vec3 pos3 = vec3(15, 0, 17);
-	vec3 pos4 = vec3(20, 0, 5);
-	auto Bez = B_Spline<vec3>(pos1,pos2,pos3,pos4);
 	float t = 0.f;
-
-	trophy.TrophyMatrix = translate(trophy.TrophyMatrix, vec3(10, 2, 10));
-
 	
-	
+	//Init spline binders
 	Mesh Spline(Line);
 	Spline.CustomCreateSpline(cubespline.SurfacePoints);
 	splinebinder.Init(cubespline.SurfacePoints);
 	splinebinder.Bind();
 	Vertex::BindAttributes();
-	
 	glm::mat4 splinematrix = glm::mat4(1.f);
 
 	glEnable(GL_DEPTH_TEST);
@@ -190,7 +148,7 @@ int main()
 		shaderProgram.Activate();
 		
 		time += Deltatime;
-
+		//Emplaces back actor position
 		if (time > 1)
 		{
 			cube.BallLineStrip.emplace_back(cube.Position, glm::vec3(1.f));
@@ -200,6 +158,8 @@ int main()
 			}
 			time = 0;
 		}
+
+		//runs update for cube
 		if (cube.BallLineStrip.size() > cubespline.FunctionGrade) {
 			cubespline.OverWriteControlPoints(cube.BallLineStrip);
 			cubespline.GenerateUniformKnotVector();
@@ -211,7 +171,6 @@ int main()
 			glDrawArrays(GL_LINE_STRIP, 0, cubespline.SurfacePoints.size());
 			
 		}
-		npc.NPCMatrix[3] = vec4(Bez(t), 1);
 		 for(auto& triangle : chunk.indices)
 		 {
 			
@@ -228,6 +187,8 @@ int main()
 				 }
 
 		 }
+
+		//Runs Updates for spheres
 		 for (int i = 0; i < Spheres.size(); i++) {
 			physics.Physics(Spheres[i], Deltatime);
 			cubespline.OverWriteControlPoints(Spheres[i].BallLineStrip);
@@ -244,10 +205,9 @@ int main()
 			
 		 }
 		
-	//trophy.DrawTrophy(vec3(1,1,1),shaderProgram,"model");
+	//Render Objects
 		 cube.Physics(chunk, Deltatime);
 		 chunk.draw("model", shaderProgram);
-		 npc.DrawNPC(shaderProgram, "model");
 		cube.Draw( "model", shaderProgram);
 		for (int i = 0; i < Spheres.size(); i++)
 		{
@@ -255,7 +215,7 @@ int main()
 			
 		}
 
-		
+		//LightShader
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightColor"), light.lightColor.x, light.lightColor.y, light.lightColor.z);
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), light.lightPos.x, light.lightPos.y, light.lightPos.z);
 		
@@ -306,6 +266,7 @@ int main()
 			camera.Position.y += 15 * Deltatime;
 			
 		}
+		//Enable/disable wireframe
 		if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) 
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -320,6 +281,7 @@ int main()
 
 
 		}
+		//Spawn new Spheres
 		if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) 
 		{
 			Mesh ball(Sphere);

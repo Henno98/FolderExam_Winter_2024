@@ -8,7 +8,7 @@ void Functions::Physics(Mesh& actor, float deltatime)
 		return;
 	}
 	for (auto& triangle : Terrain.indices)
-	{
+	{	//check each triangle
 		glm::vec3 barycentric = Barycentric(actor.Position, triangle);
 
 		float interpolatedy =
@@ -16,7 +16,7 @@ void Functions::Physics(Mesh& actor, float deltatime)
 			Terrain.Simplifiedvertices[triangle.V2].position.y * barycentric.y +
 			Terrain.Simplifiedvertices[triangle.V1].position.y * barycentric.z;
 
-
+		//if not on plane, continue
 		if (actor.Position.y > interpolatedy + actor.Radius) {
 			continue;
 		}
@@ -34,8 +34,12 @@ void Functions::Physics(Mesh& actor, float deltatime)
 				CA = P3 - P1;
 				normal = glm::cross(BA, CA);
 				normalized = glm::normalize(normal);
+
+				//old code using class notes
 				//glm::vec3 norm = glm::vec3(normalized.x * normalized.z, normalized.y * normalized.z, (normalized.z * normalized.z) - 1.f);
 				//glm::vec3 normal = terrain.Normals;
+
+				//new code accounting for slope steepness and angle
 				  // Project velocity onto the slope's tangent plane
 				glm::vec3 velocityParallelToSlope = actor.Velocity - glm::dot(actor.Velocity, normalized) * normalized;
 

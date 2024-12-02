@@ -67,7 +67,6 @@ public:
 	void CreateSphere(int subdivisions, float scale,glm::vec3 speed);
 	void Subdivide(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, int n);
 	void CreateTriangle(const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3);
-	void Diamond();
 	void CustomCreateTriangle(std::vector<Vertex>& vertices, std::vector<Indices>& indices);
 	void CustomCreateSpline(std::vector<Vertex>& vertices);
 	void ReBind(std::vector<Vertex>& vertices);
@@ -79,7 +78,6 @@ public:
 	{
 		glm::mat4 newMatrix = glm::mat4(1.f);
 		newMatrix = glm::translate(glm::mat4(1.f), Position);
-		//std::cout << "Calculated new matrix pos" << Position.x <<" " <<  Position.y << " " << Position.z << endl;
 		return newMatrix;
 	}
 };
