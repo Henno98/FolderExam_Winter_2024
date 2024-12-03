@@ -18,16 +18,10 @@
 
 #include "Bezier.h"
 #include "Shaders/ShaderClass.h"
-#include "Shaders/VAO.h"
-#include "Shaders/VBO.h"
-#include "Shaders/EBO.h"
 #include "Camera.h"
 #include "Functions.h"
 #include "Shaders/Light.h"
 #include "Landscape.h"
-#include "Models/Cube.h"
-#include "Models/NPC.h"
-#include "Models/Trophy.h"
 #include "Mesh.h"
 
 
@@ -171,26 +165,11 @@ int main()
 			glDrawArrays(GL_LINE_STRIP, 0, cubespline.SurfacePoints.size());
 			
 		}
-		 for(auto& triangle : chunk.indices)
-		 {
-			
-				 glm::vec3 Barycentric = physics.Barycentric(cube.Position, triangle);
-
-				 if (Barycentric.x >= 0 && Barycentric.y >= 0 && Barycentric.z >= 0 && (Barycentric.x + Barycentric.y + Barycentric.z <= 1)) {
-					 float interpolatedy =
-						 chunk.Simplifiedvertices[triangle.V0].position.y * Barycentric.x +
-						 chunk.Simplifiedvertices[triangle.V2].position.y * Barycentric.y +
-						 chunk.Simplifiedvertices[triangle.V1].position.y * Barycentric.z;
-						 cube.Position.y = interpolatedy + (cube.Radius*2) + 4.f;
-						 cube.Matrix = cube.MatrixCalc();
-					 break;
-				 }
-
-		 }
 
 		//Runs Updates for spheres
 		 for (int i = 0; i < Spheres.size(); i++) {
 			physics.Physics(Spheres[i], Deltatime);
+
 			cubespline.OverWriteControlPoints(Spheres[i].BallLineStrip);
 			cubespline.GenerateUniformKnotVector();
 			cubespline.generateBSplineVertices(1000, cubespline.ControlPoints);
@@ -200,13 +179,14 @@ int main()
 			glLineWidth(10.f);
 			glDrawArrays(GL_LINE_STRIP, 0, cubespline.SurfacePoints.size());
 			 for (int j = i + 1; j < Spheres.size(); j++) {
+
 				 physics.Collision(Spheres[i], Spheres[j]);
 			 }
 			
 		 }
 		
 	//Render Objects
-		 cube.Physics(chunk, Deltatime);
+		 physics.Physics(cube, Deltatime);
 		 chunk.draw("model", shaderProgram);
 		cube.Draw( "model", shaderProgram);
 		for (int i = 0; i < Spheres.size(); i++)
@@ -284,6 +264,7 @@ int main()
 		//Spawn new Spheres
 		if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) 
 		{
+
 			Mesh ball(Sphere);
 			ball.Position = camera.Position;
 			Spheres.emplace_back(ball);

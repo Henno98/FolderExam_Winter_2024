@@ -210,6 +210,9 @@ public:
 			Simplifiedvertices[triangles.V1].normal += normals;
 			Simplifiedvertices[triangles.V2].normal += normals;
 			trianglenorm++;
+			Simplifiedvertices[triangles.V0].Color += normals;
+			Simplifiedvertices[triangles.V1].Color += normals;
+			Simplifiedvertices[triangles.V2].Color += normals;
 			
 		}
 		for (auto& vertice : Simplifiedvertices)
@@ -290,9 +293,15 @@ public:
 					vals += point.position;
 				}
 
-				// Compute the simplified vertex
+				float yCoordinate;
+				if (numpoints > 0) {
+					yCoordinate = vals.y / numpoints;
+				}
+				else {
+					yCoordinate = 0.f;
+				}
 				glm::vec3 center(xmin + (Chunksize * i) + Chunksize / 2,
-					(numpoints > 0) ? vals.y / numpoints : 0.f,
+					yCoordinate,
 					zmin + (Chunksize * j) + Chunksize / 2);
 
 				// Add to simplified vertices

@@ -138,21 +138,14 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Models\BoundingBox.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Models\Cube.cpp" />
     <ClCompile Include="Dependencies\includes\glm\detail\glm.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="Landscape.cpp" />
     <ClCompile Include="Shaders\ObjectBinders.cpp" />
     <ClCompile Include="Shaders\Light.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Models\NPC.cpp" />
-    <ClCompile Include="Shaders\EBO.cpp" />
     <ClCompile Include="Shaders\ShaderClass.cpp" />
-    <ClCompile Include="Shaders\VBO.cpp" />
-    <ClCompile Include="Shaders\VAO.cpp" />
-    <ClCompile Include="Models\Trophy.cpp" />
     <ClCompile Include="Vertex.cpp" />
-    <ClCompile Include="Models\Wall.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="default.frag" />
@@ -338,7 +331,6 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Models\BoundingBox.h" />
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="Models\Cube.h" />
     <ClInclude Include="Dependencies\Eigen\src\Cholesky\LDLT.h" />
     <ClInclude Include="Dependencies\Eigen\src\Cholesky\LLT.h" />
     <ClInclude Include="Dependencies\Eigen\src\Cholesky\LLT_LAPACKE.h" />
@@ -935,14 +927,8 @@
     <ClInclude Include="Landscape.h" />
     <ClInclude Include="Shaders\ObjectBinders.h" />
     <ClInclude Include="Shaders\Light.h" />
-    <ClInclude Include="Models\NPC.h" />
-    <ClInclude Include="Shaders\EBO.h" />
     <ClInclude Include="Shaders\ShaderClass.h" />
-    <ClInclude Include="Shaders\VBO.h" />
-    <ClInclude Include="Shaders\VAO.h" />
-    <ClInclude Include="Models\Trophy.h" />
     <ClInclude Include="Vertex.h" />
-    <ClInclude Include="Models\Wall.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Las\Kjøllefjord.txt" />

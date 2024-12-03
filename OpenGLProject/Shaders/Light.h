@@ -1,9 +1,7 @@
 #pragma once
 #include "glm/fwd.hpp"
 #include "vector"
-#include "VAO.h"
-#include "VBO.h"
-#include "EBO.h"
+#include "ObjectBinders.h"
 #include "ShaderClass.h"
 #include <glm/glm.hpp>
 
@@ -18,6 +16,9 @@ struct LightVertex
 class Light
 {
 public:
+	ObjectBinders Binders;
+	std::vector<Vertex> Vertices;
+	std::vector<Indices> indicies;
 	glm::vec3 lightColor;
 	glm::vec3 lightPos;
 	glm::mat4 lightModel = glm::mat4(1.0f);
