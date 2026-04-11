@@ -29,41 +29,49 @@ public:
 	void Physics(Mesh& actor, float deltatime);
 	glm::vec3 Barycentric(glm::vec3& actorPosition,Indices& triangle)
 	{
+		for (const auto& v : Terrain.Chunks) {
+			if (actorPosition.x > v.xmax && actorPosition.x < v.xmin && actorPosition.z > v.zmax && actorPosition.z < v.zmin)
+				return actorPosition;
 
-		 P1 = Terrain.Simplifiedvertices[triangle.V0].position;
-		P2 = Terrain.Simplifiedvertices[triangle.V2].position;
-		P3 = Terrain.Simplifiedvertices[triangle.V1].position;
-		P4 = actorPosition;
 
-		BA = P2 - P1;
-		CA = P3 - P1;
-		glm::vec3 cross = glm::cross(BA, CA);
-		float area_123 = cross.y; // double the area
-		glm::vec3 baryc; // for return
+			P1 = v.vertices[triangle.V0].position;
+			P2 = v.vertices[triangle.V2].position;
+			P3 = v.vertices[triangle.V1].position;
 
-		// u
-		BA = P2 - P4;
-		CA = P3 - P4;
-		glm::vec3 nu = glm::cross(BA,CA);
-		// double the area of p4pq
-		baryc.x = nu.y / area_123;
+		/*	P1 = Terrain.Simplifiedvertices[triangle.V0].position;
+			P2 = Terrain.Simplifiedvertices[triangle.V2].position;
+			P3 = Terrain.Simplifiedvertices[triangle.V1].position;*/
+			P4 = actorPosition;
 
-		// v
-		BA = P3 - P4;
-		CA = P1 - P4;
-		glm::vec3 nv = glm::cross(BA,CA);
-		// double the area of p4pq
-		baryc.y = nv.y / area_123;
+			BA = P2 - P1;
+			CA = P3 - P1;
+			glm::vec3 cross = glm::cross(BA, CA);
+			float area_123 = cross.y; // double the area
+			glm::vec3 baryc; // for return
 
-		// w
-		BA = P1 - P4;
-		CA = P2 - P4;
-		glm::vec3 nw = (glm::cross(BA,CA));
-		// double the area of p4pq
-		baryc.z = nw.y / area_123;
+			// u
+			BA = P2 - P4;
+			CA = P3 - P4;
+			glm::vec3 nu = glm::cross(BA, CA);
+			// double the area of p4pq
+			baryc.x = nu.y / area_123;
 
-		return baryc;
+			// v
+			BA = P3 - P4;
+			CA = P1 - P4;
+			glm::vec3 nv = glm::cross(BA, CA);
+			// double the area of p4pq
+			baryc.y = nv.y / area_123;
 
+			// w
+			BA = P1 - P4;
+			CA = P2 - P4;
+			glm::vec3 nw = (glm::cross(BA, CA));
+			// double the area of p4pq
+			baryc.z = nw.y / area_123;
+
+			return baryc;
+		}
 	}
 	void Collision(Mesh& actor, Mesh& otheractor) {
 		// Calculate the vector between the centers of the two objects

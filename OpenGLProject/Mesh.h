@@ -23,6 +23,7 @@ class Mesh
 public:
 	std::vector<Vertex> Vertices;
 	std::vector<Indices> indicies;
+	//Stores ball path
 	std::vector<Vertex> BallLineStrip;
 	ObjectBinders Binders;
 	BoundingBox collider;

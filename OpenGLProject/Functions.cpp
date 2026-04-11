@@ -3,19 +3,25 @@
 
 void Functions::Physics(Mesh& actor, float deltatime)
 {
+
+	Chunk CurrentChunk;
 	accelerationVector = glm::vec3(0.f, Gravity, 0.f);
-	
-	if (actor.Position.x > Terrain.xmax || actor.Position.x < Terrain.xmin || actor.Position.z < Terrain.zmin || actor.Position.z > Terrain.zmax) {
-		return;
+	for (auto& chunk : Terrain.Chunks)
+	{
+		if (actor.Position.x > chunk.xmax || actor.Position.x < chunk.xmin || actor.Position.z < chunk.zmin || actor.Position.z > chunk.zmax) {
+			return;
+		}
+		CurrentChunk = chunk;
 	}
-	for (auto& triangle : Terrain.indices)
+
+	for (auto& triangle : CurrentChunk.indices)
 	{	//check each triangle
 		glm::vec3 barycentric = Barycentric(actor.Position, triangle);
 
 		float interpolatedy =
-			Terrain.Simplifiedvertices[triangle.V0].position.y * barycentric.x +
-			Terrain.Simplifiedvertices[triangle.V2].position.y * barycentric.y +
-			Terrain.Simplifiedvertices[triangle.V1].position.y * barycentric.z;
+			CurrentChunk.vertices[triangle.V0].position.y * barycentric.x +
+			CurrentChunk.vertices[triangle.V2].position.y * barycentric.y +
+			CurrentChunk.vertices[triangle.V1].position.y * barycentric.z;
 
 		//if not on plane, continue
 		if (actor.Position.y > interpolatedy + actor.Radius) {
@@ -28,9 +34,9 @@ void Functions::Physics(Mesh& actor, float deltatime)
 					accelerationVector = glm::vec3(0.f);
 
 
-					P1 = Terrain.Simplifiedvertices[triangle.V0].position;
-					P2 = Terrain.Simplifiedvertices[triangle.V2].position;
-					P3 = Terrain.Simplifiedvertices[triangle.V1].position;
+					P1 = CurrentChunk.vertices[triangle.V0].position;
+					P2 = CurrentChunk.vertices[triangle.V2].position;
+					P3 = CurrentChunk.vertices[triangle.V1].position;
 
 					BA = P2 - P1;
 					CA = P3 - P1;

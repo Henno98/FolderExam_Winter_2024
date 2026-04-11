@@ -69,13 +69,13 @@ int main()
 	//init camera
 	Camera camera(width, height, glm::vec3((-0.1f), 5.f, (-0.1f)));
 	//init spline
-	Bezier cubespline(3, 0.9f, .0f, 3.0f, 1000);
+	Bezier spline(3, 0.9f, .0f, 3.0f, 1000);
 	
 
 	//init lightshader
 	Light light;
 	//init Landscape
-	Landscape chunk("Las/Main.txt",.5f,5);
+	Landscape landscape("LAS/32-1-513-122-12.txt",1.f,50.f);
 	//init cube
 	Mesh cube(Cube);
 	cube.Position.y += 10.f;
@@ -107,14 +107,14 @@ int main()
 	// Shader for light cube
 	Shader lightShader("Light.vert", "Light.frag");
 	//Math functions and physics
-	Functions physics(chunk);
+	Functions physics(landscape);
 	
 	float t = 0.f;
 	
 	//Init spline binders
 	Mesh Spline(Line);
-	Spline.CustomCreateSpline(cubespline.SurfacePoints);
-	splinebinder.Init(cubespline.SurfacePoints);
+	Spline.CustomCreateSpline(spline.SurfacePoints);
+	splinebinder.Init(spline.SurfacePoints);
 	splinebinder.Bind();
 	Vertex::BindAttributes();
 	glm::mat4 splinematrix = glm::mat4(1.f);
@@ -142,33 +142,55 @@ int main()
 		shaderProgram.Activate();
 		
 		time += Deltatime;
-		//Emplaces back actor position
-		if (time > 1)
-		{
-			cube.BallLineStrip.emplace_back(cube.Position, glm::vec3(1.f));
-			for(int i = 0; i<Spheres.size();i++)
-			{
-				Spheres[i].BallLineStrip.emplace_back(Spheres[i].Position, glm::vec3(1.f));
-			}
-			time = 0;
-		}
+		
 
 		//runs update for cube
-		if (cube.BallLineStrip.size() > cubespline.FunctionGrade) {
-			cubespline.OverWriteControlPoints(cube.BallLineStrip);
-			cubespline.GenerateUniformKnotVector();
-			cubespline.generateBSplineVertices(1000, cubespline.ControlPoints);
-			splinebinder.ReBind(cubespline.SurfacePoints);
+		if (cube.BallLineStrip.size() > spline.FunctionGrade) {
+			spline.OverWriteControlPoints(cube.BallLineStrip);
+			spline.GenerateUniformKnotVector();
+			spline.generateBSplineVertices(1000, spline.ControlPoints);
+			splinebinder.ReBind(spline.SurfacePoints);
 			splinebinder.Bind();
 			glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(splinematrix));
 			glLineWidth(10.f);
-			glDrawArrays(GL_LINE_STRIP, 0, cubespline.SurfacePoints.size());
+			glDrawArrays(GL_LINE_STRIP, 0, spline.SurfacePoints.size());
 			
 		}
 
 		//Runs Updates for spheres
-		 for (int i = 0; i < Spheres.size(); i++) {
+		for (int i = 0; i < Spheres.size(); i++) {
 			physics.Physics(Spheres[i], Deltatime);
+		}
+
+		// 2. Check collisions
+		for (int i = 0; i < Spheres.size(); i++) {
+			for (int j = i + 1; j < Spheres.size(); j++) {
+			physics.Collision(Spheres[i], Spheres[j]);
+				
+			}
+		}
+		
+		// 4. Generate B-spline lines once per object
+		auto drawBSpline = [&](auto& object) 
+		{
+			if (object.BallLineStrip.size() > spline.FunctionGrade) {
+				spline.OverWriteControlPoints(object.BallLineStrip);
+				spline.GenerateUniformKnotVector();
+				spline.generateBSplineVertices(100, spline.ControlPoints);
+				splinebinder.ReBind(spline.SurfacePoints);
+				splinebinder.Bind();
+				glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(splinematrix));
+				glLineWidth(10.f);
+				glDrawArrays(GL_LINE_STRIP, 0, spline.SurfacePoints.size());
+			}
+			};
+
+		drawBSpline(cube);
+		for (auto& sphere : Spheres) {
+			drawBSpline(sphere);
+		}
+		/* for (int i = 0; i < Spheres.size(); i++) {
+			
 
 			cubespline.OverWriteControlPoints(Spheres[i].BallLineStrip);
 			cubespline.GenerateUniformKnotVector();
@@ -184,10 +206,11 @@ int main()
 			 }
 			
 		 }
-		
+		*/
 	//Render Objects
 		 physics.Physics(cube, Deltatime);
-		 chunk.draw("model", shaderProgram);
+		 //landscape.Draw("model", shaderProgram);
+		 landscape.DrawChunks(shaderProgram, "model");
 		cube.Draw( "model", shaderProgram);
 		for (int i = 0; i < Spheres.size(); i++)
 		{
@@ -279,7 +302,7 @@ int main()
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(light.lightModel));
 		glUniform3f(glGetUniformLocation(lightShader.ID, "lightColor"), light.lightColor.x, light.lightColor.y, light.lightColor.z);
 		camera.Matrix(45.f, 0.1f, 100.f, lightShader, "camMatrix");
-		light.lightPos = glm::vec3(chunk.xmax, 100.f, chunk.zmax);
+		light.lightPos = glm::vec3(landscape.xmax, 100.f, landscape.zmax);
 		light.CreateLight(vec3(1, 1, 1), vec3(1, 1, 1));
 		
 
@@ -304,7 +327,7 @@ int main()
 	//planeebo.Delete();
 	shaderProgram.Delete();
 	lightShader.Delete();
-	chunk.Binders.Delete();
+	landscape.Binders.Delete();
 	
 	// Delete window before ending the program
 	glfwDestroyWindow(window);

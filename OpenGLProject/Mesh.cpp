@@ -122,6 +122,7 @@ void Mesh::CreateSphere(int subdivisions, float scale, glm::vec3 speed)
 	Vertex::BindAttributes();
 	Binders.Unbind();
 	//Binders.EBOUnBind();
+	collider.Extent = glm::vec3(scale);
 
 }
 void Mesh::Subdivide(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, int n)
@@ -155,7 +156,7 @@ void Mesh::CreateTriangle(const glm::vec3& v1, const glm::vec3& v2, const glm::v
 	V = Vertex{ glm::vec3(v3.x,v3.y,v3.z),glm::vec3(1.f),glm::vec3(1.f) };
 	Vertices.emplace_back(V);
 
-
+	collider.Extent = glm::vec3(1.f);
 }
 
 
@@ -237,6 +238,8 @@ void Mesh::Physics(Landscape& terrain, float deltatime)
 	Position += (Velocity );
 	collider.Position = Position;
 	Matrix = MatrixCalc();
+
+	BallLineStrip.emplace_back(Vertex{ Position, glm::vec3(1.f), glm::vec3(1.f) });
 
 }
 

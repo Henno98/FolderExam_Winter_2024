@@ -127,6 +127,15 @@ public:
 		for (int i = 0; i < newpoints.size(); i++) {
 			ControlPoints.emplace_back(newpoints[i].position);
 		}
+
+	}
+	// Add a new control point and update the spline incrementally
+	void Update(int resolution) {
+
+		     // append new point
+		GenerateUniformKnotVector();                // recalc knot vector
+		generateBSplineVertices(resolution, ControlPoints); // regenerate vertices
+		// SurfacePoints now updated
 	}
 };
 
