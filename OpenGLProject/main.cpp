@@ -1,11 +1,9 @@
+#include <chrono>
 #include <iostream>
 #include <fstream>
-#include <iomanip>
+
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-#include "glm/vec3.hpp" // glm::vec3
-#include "glm/vec4.hpp" // glm::vec4, glm::ivec4
-#include <glm/mat4x4.hpp> // glm::mat4
 #include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 #include <glm/gtc/type_ptr.hpp>
 #include <GLFW/glfw3.h>
@@ -15,7 +13,6 @@
 #include <string>
 #include <Eigen/Dense>
 #include <threads.h>
-
 #include "Bezier.h"
 #include "Shaders/ShaderClass.h"
 #include "Camera.h"
@@ -75,30 +72,34 @@ int main()
 	//init lightshader
 	Light light;
 	//init Landscape
-	Landscape landscape("LAS/32-1-513-122-12.txt",1.f,50.f);
+	Landscape landscape("LAS/32-1-513-122-12.txt",1.f,2,10);
+	auto t0 = std::chrono::high_resolution_clock::now();
+	landscape.InitLandscape();
+	auto t1 = std::chrono::high_resolution_clock::now();
+	std::cout << "Landscape initialization took: " << std::chrono::duration<float, std::milli>(t1 - t0).count() << " ms\n";
 	//init cube
 	Mesh cube(Cube);
 	cube.Position.y += 10.f;
 	cube.Position.z += 10.f;
 	//init spheres
-	vector<Mesh> Spheres;
+	vector<Mesh> Actors;
 	ObjectBinders splinebinder;
 	//Create Spheres and place on different spots on plane
 	for(int i = 0 ; i < 40; i++)
 	{
 		Mesh sphere(Sphere);
-		Spheres.emplace_back(sphere);
+		Actors.emplace_back(sphere);
 
 	}
 	
 	glm::vec3 translation = glm::vec3(10.f, 100.f, 10.f);
-	for(int i = 0; i < Spheres.size();i++)
+	for(int i = 0; i < Actors.size();i++)
 	{
 		
 	
 
 
-		Spheres[i].Position = translation;
+		Actors[i].Position = translation;
 		translation += vec3(10.f,0.f,10.f);
 		
 		
@@ -107,7 +108,8 @@ int main()
 	// Shader for light cube
 	Shader lightShader("Light.vert", "Light.frag");
 	//Math functions and physics
-	Functions physics(landscape);
+	Landscape* terrainptr = &landscape;
+	Functions physics(terrainptr);
 	
 	float t = 0.f;
 	
@@ -123,9 +125,12 @@ int main()
 	glDepthFunc(GL_LESS);
 	float lastFrame = 0.f;
 	float time{0};
+	glfwSwapInterval(0);
+	printf("%s\n", glGetString(GL_RENDERER));
+
 	while (!glfwWindowShouldClose(window))
 	{
-
+		auto t0 = std::chrono::high_resolution_clock::now();
 		//Gets the current frame
 		float currentFrame = static_cast<float>(glfwGetTime());
 		float Deltatime = currentFrame - lastFrame;
@@ -142,7 +147,7 @@ int main()
 		shaderProgram.Activate();
 		
 		time += Deltatime;
-		
+		auto t1 = std::chrono::high_resolution_clock::now();
 
 		//runs update for cube
 		if (cube.BallLineStrip.size() > spline.FunctionGrade) {
@@ -156,20 +161,20 @@ int main()
 			glDrawArrays(GL_LINE_STRIP, 0, spline.SurfacePoints.size());
 			
 		}
-
+		auto t2 = std::chrono::high_resolution_clock::now();
 		//Runs Updates for spheres
-		for (int i = 0; i < Spheres.size(); i++) {
-			physics.Physics(Spheres[i], Deltatime);
+		for (int i = 0; i < Actors.size(); i++) {
+			physics.Physics(Actors[i], Deltatime);
 		}
-
+		auto t3 = std::chrono::high_resolution_clock::now();
 		// 2. Check collisions
-		for (int i = 0; i < Spheres.size(); i++) {
-			for (int j = i + 1; j < Spheres.size(); j++) {
-			physics.Collision(Spheres[i], Spheres[j]);
+		for (int i = 0; i < Actors.size(); i++) {
+			for (int j = i + 1; j < Actors.size(); j++) {
+			physics.Collision(Actors[i], Actors[j]);
 				
 			}
 		}
-		
+		auto t4 = std::chrono::high_resolution_clock::now();
 		// 4. Generate B-spline lines once per object
 		auto drawBSpline = [&](auto& object) 
 		{
@@ -186,7 +191,7 @@ int main()
 			};
 
 		drawBSpline(cube);
-		for (auto& sphere : Spheres) {
+		for (auto& sphere : Actors) {
 			drawBSpline(sphere);
 		}
 		/* for (int i = 0; i < Spheres.size(); i++) {
@@ -207,14 +212,21 @@ int main()
 			
 		 }
 		*/
+		auto t5 = std::chrono::high_resolution_clock::now();
 	//Render Objects
 		 physics.Physics(cube, Deltatime);
-		 //landscape.Draw("model", shaderProgram);
-		 landscape.DrawChunks(shaderProgram, "model");
+		 auto tt = std::chrono::high_resolution_clock::now();
+	//	 landscape.Draw("model", shaderProgram);
+		 landscape.Render(shaderProgram,"model");
+		 auto tz = std::chrono::high_resolution_clock::now();
+
+		
+
+		 //landscape.DrawChunks(shaderProgram, "model");
 		cube.Draw( "model", shaderProgram);
-		for (int i = 0; i < Spheres.size(); i++)
+		for (int i = 0; i < Actors.size(); i++)
 		{
-			Spheres[i].Draw("model", shaderProgram);
+			Actors[i].Draw("model", shaderProgram);
 			
 		}
 
@@ -290,13 +302,12 @@ int main()
 
 			Mesh ball(Sphere);
 			ball.Position = camera.Position;
-			Spheres.emplace_back(ball);
+			Actors.emplace_back(ball);
 
 
 
 		}
 		
-
 
 		lightShader.Activate();
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(light.lightModel));
@@ -306,13 +317,6 @@ int main()
 		light.CreateLight(vec3(1, 1, 1), vec3(1, 1, 1));
 		
 
-
-
-
-
-		//cout << "cube y: " << cube.CubeMatrix[3].y << endl;
-
-		glGetError();
 
 		//Camera
 

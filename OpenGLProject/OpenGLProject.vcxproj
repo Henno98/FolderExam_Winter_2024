@@ -105,12 +105,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\OpenGLProject\Dependencies;$(SolutionDir)\OpenGLProject\Dependencies\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Henno\Documents\Unreal Projects\TEST\FolderExam_Winter_2024\OpenGLProject\Dependencies\includes\Delauney;$(SolutionDir)\OpenGLProject\Dependencies;$(SolutionDir)\OpenGLProject\Dependencies\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\OpenGLProject\Dependencies\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)includes;$(SolutionDir)\OpenGLProject\Dependencies\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -134,6 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Bezier.cpp" />
+    <ClCompile Include="ECS.cpp" />
     <ClCompile Include="Functions.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Models\BoundingBox.cpp" />
@@ -141,6 +144,7 @@
     <ClCompile Include="Dependencies\includes\glm\detail\glm.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="Landscape.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Shaders\ObjectBinders.cpp" />
     <ClCompile Include="Shaders\Light.cpp" />
     <ClCompile Include="main.cpp" />
@@ -327,6 +331,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bezier.h" />
+    <ClInclude Include="ECS.h" />
     <ClInclude Include="Functions.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Models\BoundingBox.h" />
@@ -925,6 +930,7 @@
     <ClInclude Include="Dependencies\includes\glm\vector_relational.hpp" />
     <ClInclude Include="Dependencies\includes\KHR\khrplatform.h" />
     <ClInclude Include="Landscape.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="Shaders\ObjectBinders.h" />
     <ClInclude Include="Shaders\Light.h" />
     <ClInclude Include="Shaders\ShaderClass.h" />

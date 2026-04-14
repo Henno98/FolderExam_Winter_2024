@@ -1,20 +1,15 @@
 #pragma once
-#include <fstream>
-#include <iostream>
 #include <vector>
-
 #include "Landscape.h"
 #include "Mesh.h"
-#include "sstream"
 #include "Vertex.h"
 #include "glm/gtc/type_ptr.hpp"
-#include "Shaders/ShaderClass.h"
-#include "Shaders/ObjectBinders.h"
+
 class Functions
 {
 public:
-	Landscape Terrain;
-	Functions(Landscape& terrain) : Terrain(terrain){}
+	Landscape* Terrain = nullptr;
+	Functions(Landscape* terrain) : Terrain(terrain){}
 	float Gravity = -9.81f;
 	glm::vec3 gravity = glm::vec3(0, -9.81f, 0);
 	glm::vec3 accelerationVector = glm::vec3(0.f);
@@ -29,18 +24,15 @@ public:
 	void Physics(Mesh& actor, float deltatime);
 	glm::vec3 Barycentric(glm::vec3& actorPosition,Indices& triangle)
 	{
-		for (const auto& v : Terrain.Chunks) {
-			if (actorPosition.x > v.xmax && actorPosition.x < v.xmin && actorPosition.z > v.zmax && actorPosition.z < v.zmin)
-				return actorPosition;
-
-
-			P1 = v.vertices[triangle.V0].position;
-			P2 = v.vertices[triangle.V2].position;
-			P3 = v.vertices[triangle.V1].position;
-
-		/*	P1 = Terrain.Simplifiedvertices[triangle.V0].position;
-			P2 = Terrain.Simplifiedvertices[triangle.V2].position;
-			P3 = Terrain.Simplifiedvertices[triangle.V1].position;*/
+	
+		if (actorPosition.x > Terrain->xmax && actorPosition.x < Terrain->xmin && actorPosition.z > Terrain->zmax && actorPosition.z < Terrain->zmin) {
+			return actorPosition;
+		}
+		//do barycentric calculations	
+			
+			P1 = Terrain->Simplifiedvertices[triangle.V0].position;
+			P2 = Terrain->Simplifiedvertices[triangle.V2].position;
+			P3 = Terrain->Simplifiedvertices[triangle.V1].position;
 			P4 = actorPosition;
 
 			BA = P2 - P1;
@@ -71,7 +63,7 @@ public:
 			baryc.z = nw.y / area_123;
 
 			return baryc;
-		}
+		
 	}
 	void Collision(Mesh& actor, Mesh& otheractor) {
 		// Calculate the vector between the centers of the two objects
@@ -80,6 +72,9 @@ public:
 
 		// Calculate combined radii of the two objects
 		float combinedRadius = actor.Radius + otheractor.Radius;
+		if (distance >= combinedRadius || distance <= 0) return;
+
+		//Do collision check only if the objects are close enough to potentially collide
 
 		// If distance is less than combined radii, there is a collision
 		if (distance < combinedRadius && distance > 0) {
@@ -107,6 +102,7 @@ public:
 			actor.Velocity *= actor.Friction;
 			otheractor.Velocity *= otheractor.Friction;
 		}
+		
 	}
 
 };

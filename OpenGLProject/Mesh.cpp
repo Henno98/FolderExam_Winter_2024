@@ -25,13 +25,11 @@ void Mesh::CreateTriangle()
 
 	CalculateNormals();
 
-	Binders.Init(Vertices);
-	Binders.EBOInit(indicies);
+	Binders.Init(Vertices, indicies);
 	Binders.Bind();
-	Binders.EBOBind();
 	Vertex::BindAttributes();
 	Binders.Unbind();
-	Binders.EBOUnBind();
+	
 }
 
 void Mesh::CreateCube()
@@ -79,13 +77,10 @@ void Mesh::CreateCube()
 		{0,5,1}
 	};
 	CalculateNormals();
-	Binders.Init(Vertices);
-	Binders.EBOInit(indicies);
+	Binders.Init(Vertices,indicies);
 	Binders.Bind();
-	Binders.EBOBind();
 	Vertex::BindAttributes();
 	Binders.Unbind();
-	Binders.EBOUnBind();
 
 	collider.Extent = glm::vec3(1.f);
 }
@@ -115,13 +110,10 @@ void Mesh::CreateSphere(int subdivisions, float scale, glm::vec3 speed)
 		Vertex.position *= scale;
 	}
 	CalculateNormals();
-	Binders.Init(Vertices);
-	//Binders.EBOInit(indicies);
+	Binders.Init(Vertices, indicies);
 	Binders.Bind();
-	//Binders.EBOBind();
 	Vertex::BindAttributes();
 	Binders.Unbind();
-	//Binders.EBOUnBind();
 	collider.Extent = glm::vec3(scale);
 
 }
@@ -165,13 +157,11 @@ void Mesh::CustomCreateTriangle(std::vector<Vertex>& vertices, std::vector<Indic
 	Vertices = vertices;
 	indicies = indices;
 	CalculateNormals();
-	Binders.Init(Vertices);
-	Binders.EBOInit(indicies);
+	Binders.Init(Vertices, indicies);
 	Binders.Bind();
-	Binders.EBOBind();
 	Vertex::BindAttributes();
 	Binders.Unbind();
-	Binders.EBOUnBind();
+	
 
 }
 
@@ -179,7 +169,7 @@ void Mesh::CustomCreateSpline(std::vector<Vertex>& vertices)
 {
 	Vertices = vertices;
 	CalculateNormals();
-	Binders.Init(Vertices);
+	Binders.Init(Vertices, indicies);
 	Binders.Bind();
 	Vertex::BindAttributes();
 	Binders.Unbind();
@@ -223,48 +213,6 @@ void Mesh::CalculateNormals()
 
 }
 
-void Mesh::Physics(Landscape& terrain, float deltatime)
-{
-
-	
-	
-
-	
-	// Update sphere dynamics
-	Acceleration = gravity;
-	if (Velocity.y > -0.981f *Mass) {
-		Velocity += (Acceleration);
-	}
-	Position += (Velocity );
-	collider.Position = Position;
-	Matrix = MatrixCalc();
-
-	BallLineStrip.emplace_back(Vertex{ Position, glm::vec3(1.f), glm::vec3(1.f) });
-
-}
-
-void Mesh::Collision(Mesh& otheractor)
-{
-
-	glm::vec3 min = otheractor.collider.Position - otheractor.collider.Extent;
-	glm::vec3 max = otheractor.collider.Position + otheractor.collider.Extent;
-	glm::vec3 spheremin = Position;
-	glm::vec3 spheremax = otheractor.Position;
-	glm::vec3 closestpoint = glm::clamp(spheremin, min, max);
-	float diameter = glm::distance(spheremin, spheremax);
-	glm::vec3 distance = spheremin - closestpoint;
-	if (diameter <= Radius * 2 && diameter > 0) {
-
-		
-		//otheractor.SphereMatrix = glm::translate(otheractor.SphereMatrix, distance);
-		glm::vec3 V1 = ((Mass - otheractor.Mass) / (Mass + otheractor.Mass) * Velocity)
-			+ ((2 * otheractor.Mass) / (Mass + otheractor.Mass) * otheractor.Velocity);
-		glm::vec3 V2 = ((Mass * 2) / (Mass + otheractor.Mass) * Velocity)
-			+ ((otheractor.Mass - Mass) / (Mass + otheractor.Mass) * otheractor.Velocity);
-		Velocity = V1;
-		otheractor.Velocity = V2;
-	}
-}
 
 void Mesh::Draw(const char* uniform, Shader& shader)
 {
@@ -274,11 +222,11 @@ void Mesh::Draw(const char* uniform, Shader& shader)
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(Matrix));
 	switch (mesh) {
 	case Pyramid:
-		Binders.EBOBind();
+		
 		glDrawElements(GL_TRIANGLES, indicies.size() * 3, GL_UNSIGNED_INT, nullptr);
 		break;
 	case Cube:
-		Binders.EBOBind();
+		
 		glDrawElements(GL_TRIANGLES, indicies.size() * 3, GL_UNSIGNED_INT, nullptr);
 		break;
 	case Sphere:

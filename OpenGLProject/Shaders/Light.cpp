@@ -12,12 +12,17 @@ Light::Light()
 	lightModel = glm::translate(lightModel, lightPos);
 }
 
-void Light::DrawLight()
+void Light::DrawLight(const char* uniform, Shader& shader)
 {
 
 	
-	
-	
+	Binders.Bind();
+	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(lightModel));
+	glDrawElements(GL_TRIANGLES, indicies.size() * 3, GL_UNSIGNED_INT, nullptr);
+	Binders.Unbind();
+
+
+
 
 	
 	
@@ -25,6 +30,7 @@ void Light::DrawLight()
 }
 void Light::CreateLight( glm::vec3 scale, glm::vec3 color)
 {
+	lightColor = color;
 
 	Vertices =
 	{
@@ -47,7 +53,7 @@ void Light::CreateLight( glm::vec3 scale, glm::vec3 color)
 
 
 	};
-
+	
 	indicies =
 	{
 		{0,1,2},  // Front face
@@ -69,13 +75,16 @@ void Light::CreateLight( glm::vec3 scale, glm::vec3 color)
 		{0,5,1}
 	};
 	
-	Binders.Init(Vertices);
-	Binders.EBOInit(indicies);
+	Binders.Init(Vertices,indicies);
 	Binders.Bind();
-	Binders.EBOBind();
 	Vertex::BindAttributes();
 	Binders.Unbind();
-	Binders.EBOUnBind();
+	
 
+}
+void Light::MoveLight(glm::vec3 newPos)
+{
+	lightPos = newPos;
+	lightModel = glm::translate(glm::mat4(1.0f), newPos);
 }
 ;

@@ -1,7 +1,6 @@
 #pragma once
 #include <iostream>
 #include <vector>
-
 #include "Landscape.h"
 #include "Vertex.h"
 #include "Dependencies/includes/glm/glm.hpp"
@@ -53,13 +52,13 @@ public:
 			CreateSphere(3,1.f,glm::vec3(1.f));
 			break;
 		case Custom:
-			cout << "Call on the CustomCreate function" << endl;
+			cout << "Call on the CustomCreate functio\n";
 			break;
 		case Line:
-			cout << "Call on the CustomCreate function" << endl;
+			cout << "Call on the CustomCreate function\n";
 			break;
 		default:
-			std::cout << "Mesh type does not exist" << std::endl;
+			std::cout << "Mesh type does not exist\n";
 		}
 	};
 

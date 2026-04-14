@@ -24,8 +24,10 @@ public:
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	
 	Light();
-	void DrawLight();
+	void DrawLight(const char* uniform, Shader& shader);
 	void CreateLight(glm::vec3 scale, glm::vec3 color);
+	void MoveLight(glm::vec3 newPos);
+	
 };
 
 

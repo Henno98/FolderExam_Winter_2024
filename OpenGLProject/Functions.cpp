@@ -4,24 +4,40 @@
 void Functions::Physics(Mesh& actor, float deltatime)
 {
 
-	Chunk CurrentChunk;
+	
 	accelerationVector = glm::vec3(0.f, Gravity, 0.f);
-	for (auto& chunk : Terrain.Chunks)
-	{
-		if (actor.Position.x > chunk.xmax || actor.Position.x < chunk.xmin || actor.Position.z < chunk.zmin || actor.Position.z > chunk.zmax) {
-			return;
-		}
-		CurrentChunk = chunk;
-	}
+	Chunk* chunk = Terrain->GetChunk(actor.Position);
 
-	for (auto& triangle : CurrentChunk.indices)
+	if (!chunk)
+		return;
+
+	for (auto& triangle : chunk->indices)
 	{	//check each triangle
+		
+		glm::vec3 v0 = Terrain->Simplifiedvertices[triangle.V0].position;
+		glm::vec3 v1 = Terrain->Simplifiedvertices[triangle.V1].position;
+		glm::vec3 v2 = Terrain->Simplifiedvertices[triangle.V2].position;
+
+		float minX = std::min({ v0.x, v1.x, v2.x });
+		float maxX = std::max({ v0.x, v1.x, v2.x });
+		float minZ = std::min({ v0.z, v1.z, v2.z });
+		float maxZ = std::max({ v0.z, v1.z, v2.z });
+
+		if (actor.Position.x < minX - actor.Radius ||
+			actor.Position.x > maxX + actor.Radius ||
+			actor.Position.z < minZ - actor.Radius ||
+			actor.Position.z > maxZ + actor.Radius)
+		{
+			continue;
+		}
+
+
 		glm::vec3 barycentric = Barycentric(actor.Position, triangle);
 
 		float interpolatedy =
-			CurrentChunk.vertices[triangle.V0].position.y * barycentric.x +
-			CurrentChunk.vertices[triangle.V2].position.y * barycentric.y +
-			CurrentChunk.vertices[triangle.V1].position.y * barycentric.z;
+			Terrain->Simplifiedvertices[triangle.V0].position.y * barycentric.x +
+			Terrain->Simplifiedvertices[triangle.V2].position.y * barycentric.y +
+			Terrain->Simplifiedvertices[triangle.V1].position.y * barycentric.z;
 
 		//if not on plane, continue
 		if (actor.Position.y > interpolatedy + actor.Radius) {
@@ -34,9 +50,9 @@ void Functions::Physics(Mesh& actor, float deltatime)
 					accelerationVector = glm::vec3(0.f);
 
 
-					P1 = CurrentChunk.vertices[triangle.V0].position;
-					P2 = CurrentChunk.vertices[triangle.V2].position;
-					P3 = CurrentChunk.vertices[triangle.V1].position;
+					P1 = Terrain->Simplifiedvertices[triangle.V0].position;
+					P2 = Terrain->Simplifiedvertices[triangle.V2].position;
+					P3 = Terrain->Simplifiedvertices[triangle.V1].position;
 
 					BA = P2 - P1;
 					CA = P3 - P1;
