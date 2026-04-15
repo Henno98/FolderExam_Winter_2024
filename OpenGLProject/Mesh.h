@@ -70,7 +70,7 @@ public:
 	void CustomCreateTriangle(std::vector<Vertex>& vertices, std::vector<Indices>& indices);
 	void CustomCreateSpline(std::vector<Vertex>& vertices);
 	void ReBind(std::vector<Vertex>& vertices);
-	void CalculateNormals();
+	void CalculateNormals(std::vector<Indices>& indices, std::vector<Vertex>& vertices);
 	void Physics(Landscape& terrain, float deltatime);
 	void Collision(Mesh& otheractor);
 	void Draw(const char* uniform, Shader& shader);

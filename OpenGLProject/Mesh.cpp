@@ -23,11 +23,10 @@ void Mesh::CreateTriangle()
 		{2,3,4}
 	};
 
-	CalculateNormals();
+	CalculateNormals(indicies, Vertices);
 
 	Binders.Init(Vertices, indicies);
 	Binders.Bind();
-	Vertex::BindAttributes();
 	Binders.Unbind();
 	
 }
@@ -36,23 +35,22 @@ void Mesh::CreateCube()
 {
 	Vertices =
 	{
-	{glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.f), glm::vec3(0, 1, 0)},
+	{glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.f), glm::vec3(0, 0, 0)},
 	// Vertex 2
-	{glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(1.f), glm::vec3(0, 0, 1)},
+	{glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(1.f), glm::vec3(0, 0, 0)},
 	// Vertex 3
-	{glm::vec3(1.0f, -1.0f, -1.0f), glm::vec3(1.f), glm::vec3(1, 0, 0)},
+	{glm::vec3(1.0f, -1.0f, -1.0f), glm::vec3(1.f), glm::vec3(0, 0, 0)},
 	// Vertex 4
-	{glm::vec3(1.0f, 1.0f, -1.0f), glm::vec3(1.f), glm::vec3(0, 1, 0)},
+	{glm::vec3(1.0f, 1.0f, -1.0f), glm::vec3(1.f), glm::vec3(0, 0, 0)},
 
 	// Vertex 5
-	{glm::vec3(-1.0f, 1.0f, 1.0f), glm::vec3(1.f), glm::vec3(0, 1, 0)},
+	{glm::vec3(-1.0f, 1.0f, 1.0f), glm::vec3(1.f), glm::vec3(0, 0, 0)},
 	// Vertex 6
-	{glm::vec3(-1.0f, -1.0f, 1.0f), glm::vec3(1.f), glm::vec3(0, 0, 1)},
+	{glm::vec3(-1.0f, -1.0f, 1.0f), glm::vec3(1.f), glm::vec3(0, 0, 0)},
 	// Vertex 7
-	{glm::vec3(-1.0f, -1.0f, -1.0f), glm::vec3(1.f), glm::vec3(1, 0, 0)},
+	{glm::vec3(-1.0f, -1.0f, -1.0f), glm::vec3(1.f), glm::vec3(0, 0, 0)},
 	// Vertex 8
-	{glm::vec3(-1.0f, 1.0f, -1.0f), glm::vec3(1.f), glm::vec3(0, 1, 0)},
-
+	{glm::vec3(-1.0f, 1.0f, -1.0f), glm::vec3(1.f), glm::vec3(0, 0, 0)},
 
 	};
 
@@ -76,10 +74,9 @@ void Mesh::CreateCube()
 		{0,4,5},  // Right face
 		{0,5,1}
 	};
-	CalculateNormals();
+	CalculateNormals(indicies, Vertices);
 	Binders.Init(Vertices,indicies);
 	Binders.Bind();
-	Vertex::BindAttributes();
 	Binders.Unbind();
 
 	collider.Extent = glm::vec3(1.f);
@@ -109,10 +106,9 @@ void Mesh::CreateSphere(int subdivisions, float scale, glm::vec3 speed)
 	{
 		Vertex.position *= scale;
 	}
-	CalculateNormals();
+	CalculateNormals(indicies,Vertices);
 	Binders.Init(Vertices, indicies);
 	Binders.Bind();
-	Vertex::BindAttributes();
 	Binders.Unbind();
 	collider.Extent = glm::vec3(scale);
 
@@ -156,10 +152,9 @@ void Mesh::CustomCreateTriangle(std::vector<Vertex>& vertices, std::vector<Indic
 {
 	Vertices = vertices;
 	indicies = indices;
-	CalculateNormals();
+	CalculateNormals(indices,vertices);
 	Binders.Init(Vertices, indicies);
 	Binders.Bind();
-	Vertex::BindAttributes();
 	Binders.Unbind();
 	
 
@@ -168,10 +163,9 @@ void Mesh::CustomCreateTriangle(std::vector<Vertex>& vertices, std::vector<Indic
 void Mesh::CustomCreateSpline(std::vector<Vertex>& vertices)
 {
 	Vertices = vertices;
-	CalculateNormals();
+	CalculateNormals(indicies, Vertices);
 	Binders.Init(Vertices, indicies);
 	Binders.Bind();
-	Vertex::BindAttributes();
 	Binders.Unbind();
 }
 
@@ -180,16 +174,22 @@ void Mesh::ReBind(std::vector<Vertex>& vertices)
 	Binders.ReBind(vertices);
 }
 
-void Mesh::CalculateNormals()
+void Mesh::CalculateNormals(std::vector<Indices>& indices, std::vector<Vertex>& vertices)
 {
 	float trianglenorm = 0;
 	float verticenormal = 0;
 
-	for (const auto& triangles : indicies)
+	/*for (auto& vertice : vertices)
 	{
-		const glm::vec3& v0 = Vertices[triangles.V0].position;
-		const glm::vec3& v1 = Vertices[triangles.V1].position;
-		const glm::vec3& v2 = Vertices[triangles.V2].position;
+		vertice.normal = glm::vec3(0.f);
+
+	}*/
+
+	for (const auto& triangles : indices)
+	{
+		const glm::vec3& v0 = vertices[triangles.V0].position;
+		const glm::vec3& v1 = vertices[triangles.V1].position;
+		const glm::vec3& v2 = vertices[triangles.V2].position;
 
 		glm::vec3 edge1 = v1 - v0;
 		glm::vec3 edge2 = v2 - v0;
@@ -198,19 +198,22 @@ void Mesh::CalculateNormals()
 
 		glm::vec3 normals = glm::normalize(norm);
 
-		Vertices[triangles.V0].normal += normals;
-		Vertices[triangles.V1].normal += normals;
-		Vertices[triangles.V2].normal += normals;
+
+		vertices[triangles.V0].normal += normals;
+		vertices[triangles.V1].normal += normals;
+		vertices[triangles.V2].normal += normals;
 		trianglenorm++;
+		/*vertices[triangles.V0].Color += normals;
+		vertices[triangles.V1].Color += normals;
+		vertices[triangles.V2].Color += normals;*/
 
 	}
-	for (auto& vertice : Vertices)
+	for (auto& vertice : vertices)
 	{
 		vertice.normal = glm::normalize(vertice.normal);
 		verticenormal++;
 	}
 	
-
 }
 
 

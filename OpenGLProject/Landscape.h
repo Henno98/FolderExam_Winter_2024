@@ -1,6 +1,7 @@
 #pragma once
 #include <chrono>
 #include <vector>
+#include "Dependencies/includes/Delauney/delaunator-header-only.hpp"
 #include <iostream>
 #include <fstream>
 #include "Vertex.h"
@@ -11,7 +12,10 @@
 
 struct Chunk
 {
-public:
+
+	
+	
+	public:
 	std::vector<Vertex> vertices;
 	std::vector<Indices> indices;
 	glm::vec3 position;
@@ -20,7 +24,7 @@ public:
 	glm::mat4 Matrix = glm::mat4(1.f);
 	int CurrentLOD{ 0 };
 	int TargetLOD{ 0 };
-	int indexCount{ 0 };
+	unsigned int indexCount{ 0 };
 	glm::vec3 center;
 
 	void ComputeCenter()
@@ -46,11 +50,8 @@ public:
 			return;
 		}
 
-
 		Binders.Init(vertices, indices);
-		Binders.Bind();
-		Binders.EBOUnBind();
-		Binders.Unbind();
+		
 
 	}
 
@@ -360,34 +361,36 @@ public:
 		
 	void TriangulateChunk(Chunk& chunk)
 	{
-		//if (chunk.vertices.size() < 3)
-		//	return;
+		if (chunk.vertices.size() < 3)
+			return;
 
-		//std::vector<double> coords;
-		//coords.reserve(chunk.vertices.size() * 2);
+		std::vector<double> coords;
+		coords.reserve(chunk.vertices.size() * 2);
 
-		//// 1. flatten to 2D 
-		//for (const auto& v : chunk.vertices)
-		//{
-		//	coords.push_back((double)v.position.x);
-		//	coords.push_back((double)v.position.z);
-		//}
+		// 1. flatten to 2D 
+		for (const auto& v : chunk.vertices)
+		{
+			coords.push_back((double)v.position.x);
+			coords.push_back((double)v.position.z);
+		}
 
-		//// 2. run delaunay
-		//delaunator::Delaunator d(coords);
+		// 2. run delaunay
+		delaunator::Delaunator d(coords);
 
-		//// 3. build indices
-		//chunk.indices.clear();
-		//chunk.indices.reserve(d.triangles.size() / 3);
+		// 3. build indices
+		chunk.indices.clear();
+		chunk.indices.reserve(d.triangles.size() / 3);
 
-		//for (size_t i = 0; i < d.triangles.size(); i += 3)
-		//{
-		//	chunk.indices.emplace_back(Indices{
-		//		(unsigned int)d.triangles[i],
-		//		(unsigned int)d.triangles[i + 1],
-		//		(unsigned int)d.triangles[i + 2]
-		//		});
-		//}
+		for (size_t i = 0; i < d.triangles.size(); i += 3)
+		{
+			chunk.indices.emplace_back(Indices{
+				(unsigned int)d.triangles[i],
+				(unsigned int)d.triangles[i + 1],
+				(unsigned int)d.triangles[i + 2]
+				});
+		}
+
+		chunk.indexCount = chunk.Binders.FlattenIndices(chunk.indices).size();
 	}
 		
 	
@@ -455,20 +458,17 @@ public:
 			{
 				chunk.Binders.Bind();
 				glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(chunk.Matrix));
-				glDrawElements(GL_TRIANGLES,chunk.indices.size() * 3,GL_UNSIGNED_INT,0);
+				glDrawElements(GL_TRIANGLES,chunk.indexCount,GL_UNSIGNED_INT,nullptr);
 			}
 		}
 
 
 		void InitLandscape()
-	{
-			ProcessChunkTriangles(xmin, xmax, zmin, zmax, ChunkSize, vertices);
-			#pragma omp parallel for
-			for (int i = 0; i < Chunks.size(); i++)
-			{
-				
-			}
+	{	
+		
 			int i = 0;
+			ProcessVertices(xmin, xmax, zmin, zmax, LOD, scale);
+			ProcessChunkTriangles(xmin, xmax, zmin, zmax, ChunkSize, Simplifiedvertices);
 			for (auto& chunk : Chunks)
 			{
 				i++;
@@ -491,7 +491,12 @@ public:
 	{
 		float trianglenorm = 0;
 		float verticenormal = 0;
-		
+
+		for (auto& vertice : vertices)
+		{
+			vertice.normal = glm::vec3(0.f);
+
+		}
 		for(const auto& triangles : indices)
 		{
 			const glm::vec3& v0 = vertices[triangles.V0].position;
@@ -510,9 +515,9 @@ public:
 			vertices[triangles.V1].normal += normals;
 			vertices[triangles.V2].normal += normals;
 			trianglenorm++;
-			vertices[triangles.V0].Color += normals;
+			/*vertices[triangles.V0].Color += normals;
 			vertices[triangles.V1].Color += normals;
-			vertices[triangles.V2].Color += normals;
+			vertices[triangles.V2].Color += normals;*/
 			
 		}
 		for (auto& vertice : vertices)
@@ -616,7 +621,7 @@ public:
 				// Add to simplified vertices
 				Simplifiedvertices.emplace_back(center * scale,
 					glm::vec3(1.f, center.y / 10, 1.f),
-					glm::vec3(0.f));
+					glm::vec3(1.f));
 			}
 		}
 		// Generate indices for the grid
@@ -675,7 +680,7 @@ public:
 
 			int idx = cx + cz * cols;
 
-			Chunks[idx].vertices.emplace_back(verts.position, glm::vec3(1.f, abs(verts.position.y) / 100, 1.f));
+			Chunks[idx].vertices.emplace_back(Vertex{verts.position, glm::vec3(1.f, 1.f, 0.f), glm::vec3(0.f)});
 		}
 
 		std::cout << "Finished processing triangles into chunks" << "\n";

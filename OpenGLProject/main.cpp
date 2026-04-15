@@ -19,6 +19,9 @@
 #include "Functions.h"
 #include "Shaders/Light.h"
 #include "Landscape.h"
+#include "Dependencies/imgui-1.92.7/imgui.h"
+#include "Dependencies/imgui-1.92.7/backends/imgui_impl_glfw.h"
+#include "Dependencies/imgui-1.92.7/backends/imgui_impl_opengl3.h"
 #include "Mesh.h"
 
 
@@ -60,6 +63,18 @@ int main()
 	// Specify the viewport of OpenGL in the Window
 	glViewport(0, 0, width, height);
 
+	//IMGUI_CHECKVERSION();
+	//ImGui::CreateContext();
+
+	//ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+	//// Optional
+	//ImGui::StyleColorsDark();
+
+	//// Setup Platform/Renderer bindings
+	//ImGui_ImplGlfw_InitForOpenGL(window, true);
+	//ImGui_ImplOpenGL3_Init("#version 330");
+
 
 	// Generates Shader object using shaders defualt.vert and default.frag
 	Shader shaderProgram("default.vert", "default.frag");
@@ -72,7 +87,7 @@ int main()
 	//init lightshader
 	Light light;
 	//init Landscape
-	Landscape landscape("LAS/32-1-513-122-12.txt",1.f,2,10);
+	Landscape landscape("LAS/32-1-513-122-12.txt",1.f,1,50);
 	auto t0 = std::chrono::high_resolution_clock::now();
 	landscape.InitLandscape();
 	auto t1 = std::chrono::high_resolution_clock::now();
@@ -125,11 +140,26 @@ int main()
 	glDepthFunc(GL_LESS);
 	float lastFrame = 0.f;
 	float time{0};
-	glfwSwapInterval(0);
+	
 	printf("%s\n", glGetString(GL_RENDERER));
 
 	while (!glfwWindowShouldClose(window))
 	{
+
+		//// Start ImGui frame
+		//ImGui_ImplOpenGL3_NewFrame();
+		//ImGui_ImplGlfw_NewFrame();
+		//ImGui::NewFrame();
+		//
+		//ImGui::Begin("Debug");
+
+		//ImGui::Text("Hello from ImGui!");
+
+		//static float value = 0.0f;
+		//ImGui::SliderFloat("Value", &value, 0.0f, 100.0f);
+
+		//ImGui::End();
+
 		auto t0 = std::chrono::high_resolution_clock::now();
 		//Gets the current frame
 		float currentFrame = static_cast<float>(glfwGetTime());
@@ -316,10 +346,17 @@ int main()
 		light.lightPos = glm::vec3(landscape.xmax, 100.f, landscape.zmax);
 		light.CreateLight(vec3(1, 1, 1), vec3(1, 1, 1));
 		
+		glGetError();
 
+		std::cout << "Frame Time: " << std::chrono::duration<float, std::milli>(t1 - t0).count() << " ms\n";
+		std::cout << "Update Time: " << std::chrono::duration<float, std::milli>(t2 - t1).count() << " ms\n";
+		std::cout << "Collision Time: " << std::chrono::duration<float, std::milli>(t3 - t2).count() << " ms\n";
+		std::cout << "Draw Time: " << std::chrono::duration<float, std::milli>(t4 - t3).count() << " ms\n";
 
 		//Camera
-
+		 // Render ImGui on top
+	/*	ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());*/
 		//Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
 		// Take care of all GLFW events
@@ -332,7 +369,10 @@ int main()
 	shaderProgram.Delete();
 	lightShader.Delete();
 	landscape.Binders.Delete();
-	
+
+	/*ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();*/
 	// Delete window before ending the program
 	glfwDestroyWindow(window);
 	// Terminate GLFW before ending the program

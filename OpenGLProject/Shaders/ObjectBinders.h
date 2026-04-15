@@ -5,20 +5,18 @@
 class ObjectBinders
 {
 public:
+
 	ObjectBinders();
-	ObjectBinders(std::vector<Vertex>& Vertices, std::vector<Indices>& indices)
-	{
-		
-	}
+
 	GLuint VAOID;
 	GLuint VBOID;
 	GLuint EBOID;
-	std::vector<GLuint> flatIndices;
+
 	void Init(std::vector<Vertex>& Vertices);
 	
 	void Init(std::vector<Vertex>& Vertices, std::vector<Indices>& indices);
 
-	void EBOInit(std::vector<Indices>& indices);
+	//void EBOInit(std::vector<Indices>& indices);
 
 	void Bind();
 
@@ -34,7 +32,8 @@ public:
 	void Unbind();
 
 	void Delete();
-	void FlattenIndices(std::vector<Indices>& indices)
+
+	std::vector<GLuint> FlattenIndices(std::vector<Indices>& indices)
 	{
 		std::vector<GLuint> flatIndices;
 		flatIndices.reserve(indices.size() * 3);
@@ -45,6 +44,9 @@ public:
 			flatIndices.push_back(tri.V1);
 			flatIndices.push_back(tri.V2);
 		}
+
+
+		return flatIndices;
 	};
 
 };

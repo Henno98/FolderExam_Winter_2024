@@ -22,17 +22,17 @@ public:
 	glm::vec3 P3;
 	glm::vec3 P4;
 	void Physics(Mesh& actor, float deltatime);
-	glm::vec3 Barycentric(glm::vec3& actorPosition,Indices& triangle)
+	glm::vec3 Barycentric(glm::vec3& actorPosition,Indices& triangle, Chunk* chunk)
 	{
 	
-		if (actorPosition.x > Terrain->xmax && actorPosition.x < Terrain->xmin && actorPosition.z > Terrain->zmax && actorPosition.z < Terrain->zmin) {
+		if (actorPosition.x > chunk->xmax && actorPosition.x < chunk->xmin && actorPosition.z > chunk->zmax && actorPosition.z < chunk->zmin) {
 			return actorPosition;
 		}
 		//do barycentric calculations	
 			
-			P1 = Terrain->Simplifiedvertices[triangle.V0].position;
-			P2 = Terrain->Simplifiedvertices[triangle.V2].position;
-			P3 = Terrain->Simplifiedvertices[triangle.V1].position;
+			P1 = chunk->vertices[triangle.V0].position;
+			P2 = chunk->vertices[triangle.V2].position;
+			P3 = chunk->vertices[triangle.V1].position;
 			P4 = actorPosition;
 
 			BA = P2 - P1;

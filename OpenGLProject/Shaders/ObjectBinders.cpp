@@ -24,7 +24,9 @@ void ObjectBinders::Init(std::vector<Vertex>& Vertices)
 void ObjectBinders::Init(std::vector<Vertex>& Vertices,
     std::vector<Indices>& indices)
 {
-	
+
+    std::vector<GLuint> flatIndices = FlattenIndices(indices);
+
     glGenVertexArrays(1, &VAOID);
     glBindVertexArray(VAOID);
 
@@ -40,8 +42,8 @@ void ObjectBinders::Init(std::vector<Vertex>& Vertices,
     glGenBuffers(1, &EBOID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-        indices.size() * sizeof(Indices),
-        indices.data(),
+        flatIndices.size() * sizeof(GLuint),
+        flatIndices.data(),
         GL_STATIC_DRAW);
 
     
@@ -61,15 +63,16 @@ void ObjectBinders::Bind()
 
 void ObjectBinders::ReBind(std::vector<Vertex>& Vertices)
 {
+
+
 	glBindBuffer(GL_ARRAY_BUFFER, VBOID);
 	glBufferData(GL_ARRAY_BUFFER, Vertices.size() * sizeof(Vertex), Vertices.data(), GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOID);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, flatIndices.size() * sizeof(GLuint), flatIndices.data(), GL_DYNAMIC_DRAW);
+	
 }
 
 void ObjectBinders::ReBind(std::vector<Vertex>& Vertices, std::vector<Indices>& indices)
 {
-   
+    std::vector<GLuint> flatIndices = FlattenIndices(indices);
 
     glBindVertexArray(VAOID);
 
@@ -77,7 +80,7 @@ void ObjectBinders::ReBind(std::vector<Vertex>& Vertices, std::vector<Indices>& 
     glBufferData(GL_ARRAY_BUFFER,Vertices.size() * sizeof(Vertex),Vertices.data(),GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOID);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Indices), indices.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, flatIndices.size() * sizeof(GLuint), flatIndices.data(), GL_DYNAMIC_DRAW);
 
     glBindVertexArray(0);
 }
@@ -93,8 +96,8 @@ void ObjectBinders::EBOUnBind()
 
 void ObjectBinders::Unbind()
 {
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
 
 }
 
