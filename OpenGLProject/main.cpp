@@ -347,12 +347,14 @@ int main()
 		light.CreateLight(vec3(1, 1, 1), vec3(1, 1, 1));
 		
 		glGetError();
+		if (t > 1.f) {
 
-		std::cout << "Frame Time: " << std::chrono::duration<float, std::milli>(t1 - t0).count() << " ms\n";
-		std::cout << "Update Time: " << std::chrono::duration<float, std::milli>(t2 - t1).count() << " ms\n";
-		std::cout << "Collision Time: " << std::chrono::duration<float, std::milli>(t3 - t2).count() << " ms\n";
-		std::cout << "Draw Time: " << std::chrono::duration<float, std::milli>(t4 - t3).count() << " ms\n";
 
+			std::cout << "Frame Time: " << std::chrono::duration<float, std::milli>(t1 - t0).count() << " ms\n";
+			std::cout << "Update Time: " << std::chrono::duration<float, std::milli>(t2 - t1).count() << " ms\n";
+			std::cout << "Collision Time: " << std::chrono::duration<float, std::milli>(t3 - t2).count() << " ms\n";
+			std::cout << "Draw Time: " << std::chrono::duration<float, std::milli>(t4 - t3).count() << " ms\n";
+		}
 		//Camera
 		 // Render ImGui on top
 	/*	ImGui::Render();

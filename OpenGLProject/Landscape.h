@@ -680,7 +680,7 @@ public:
 
 			int idx = cx + cz * cols;
 
-			Chunks[idx].vertices.emplace_back(Vertex{verts.position, glm::vec3(1.f, 1.f, 0.f), glm::vec3(0.f)});
+			Chunks[idx].vertices.emplace_back(Vertex{verts.position, glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f)});
 		}
 
 		std::cout << "Finished processing triangles into chunks" << "\n";
